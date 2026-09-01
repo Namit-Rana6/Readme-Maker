@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Readme Maker Preview</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0b0f17;
+        font-family: Arial, sans-serif;
+      }
+
+      .panel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        background: #111827;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      }
+
+      .github-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        color: #e6edf3;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      input {
+        flex: 1;
+        min-width: 220px;
+        border: 1px solid #2d3b53;
+        background: #0b1220;
+        color: #e6edf3;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+
+      button {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 14px;
+        background: #a371f7;
+        color: white;
+        cursor: pointer;
+      }
+
+      .status {
+        min-height: 20px;
+        color: #8b949e;
+        font-size: 12px;
+      }
+
+      #preview {
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel">
+      <form id="github-user-form" class="github-form">
+        <div class="stack">
+          <label for="github-username">GitHub username</label>
+          <div class="row">
+            <input
+              id="github-username"
+              type="text"
+              value="octocat"
+              placeholder="Enter username"
+            />
+            <button type="submit">Load</button>
+          </div>
+        </div>
+
+        <div id="status" class="status">Ready</div>
+      </form>
+
+      <div id="preview"></div>
+    </div>
+
+    <script type="module" src="./src/index.ts"></script>
+  </body>
+</html>
