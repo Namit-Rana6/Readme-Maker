@@ -24,7 +24,22 @@ export interface GitHubUserResponse {
       totalCount: number;
     };
 
+    gists?: {
+      totalCount: number;
+    };
+
+    organizations?: {
+      totalCount: number;
+    };
+
     repositories: {
+      totalCount: number;
+      nodes?: Array<{
+        stargazerCount: number;
+      }>;
+    };
+
+    repositoriesContributedTo?: {
       totalCount: number;
     };
 
@@ -34,6 +49,8 @@ export interface GitHubUserResponse {
       totalPullRequestContributions: number;
       totalPullRequestReviewContributions: number;
       totalRepositoryContributions: number;
+      restrictedContributionsCount?: number;
+
 
       contributionCalendar: {
         totalContributions: number;

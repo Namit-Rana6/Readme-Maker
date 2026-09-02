@@ -1,5 +1,6 @@
 import http from "node:http";
 import { fetchGitHubStats } from "./src/data/github/client.ts";
+import { resolveTheme } from "./src/core/theme.ts";
 
 const PORT = Number(process.env.PORT || 3001);
 
@@ -33,6 +34,8 @@ const server = http.createServer(async (req, res) => {
   }
 
   const username = url.searchParams.get("username")?.trim();
+  const themeName = url.searchParams.get("theme") ?? "default";
+  const theme = resolveTheme(themeName);
   const token = process.env.GITHUB_TOKEN;
 
   if (!username) {
@@ -53,7 +56,7 @@ const server = http.createServer(async (req, res) => {
   try {
     const stats = await fetchGitHubStats(username, token);
 
-    sendJson(res, 200, stats);
+    sendJson(res, 200, { ...stats, theme: themeName, themeColors: theme });
   } catch (error) {
     sendJson(res, 500, {
       error:

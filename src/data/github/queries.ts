@@ -15,7 +15,22 @@ export const GITHUB_STATS_QUERY = `
         totalCount
       }
 
-      repositories(first: 1) {
+      gists(first: 1) {
+        totalCount
+      }
+
+      organizations(first: 1) {
+        totalCount
+      }
+
+      repositories(first: 100, ownerAffiliations: OWNER, privacy: PUBLIC) {
+        totalCount
+        nodes {
+          stargazerCount
+        }
+      }
+
+      repositoriesContributedTo(first: 1) {
         totalCount
       }
 
@@ -28,6 +43,7 @@ export const GITHUB_STATS_QUERY = `
         totalPullRequestContributions
         totalPullRequestReviewContributions
         totalRepositoryContributions
+        restrictedContributionsCount
 
         contributionCalendar {
           totalContributions

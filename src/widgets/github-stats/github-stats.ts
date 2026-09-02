@@ -5,6 +5,7 @@ import {
   getGitHubIcon,
   type GitHubIconName,
 } from "../../core/icons/github-icons";
+import { themes, type WidgetTheme } from "../../core/theme";
 
 export type GitHubStatKey =
   | "username"
@@ -12,20 +13,27 @@ export type GitHubStatKey =
   | "bio"
   | "followers"
   | "following"
+  | "gists"
+  | "organizations"
   | "repositories"
   | "stars"
+  | "contributedRepositories"
   | "commits"
   | "issues"
   | "pullRequests"
   | "pullRequestReviews"
   | "repositoryContributions"
+  | "restrictedContributions"
   | "contributions"
   | "codingHours";
 
-interface GitHubStatsConfig {
+export interface GitHubStatsConfig {
   title?: string;
   hideTitle?: boolean;
   borderRadius?: number;
+  showIcons?: boolean;
+  hideBorder?: boolean;
+  theme?: WidgetTheme;
   visibleStats?: GitHubStatKey[];
 }
 const statDefinitions: Array<{
@@ -59,6 +67,18 @@ const statDefinitions: Array<{
     value: (data) => data.following,
   },
   {
+    key: "gists",
+    icon: "file-description",
+    label: "Public Gists:",
+    value: (data) => data.gists,
+  },
+  {
+    key: "organizations",
+    icon: "users",
+    label: "Organizations:",
+    value: (data) => data.organizations,
+  },
+  {
     key: "repositories",
     icon: "book-2",
     label: "Public Repositories:",
@@ -69,6 +89,12 @@ const statDefinitions: Array<{
     icon: "star",
     label: "Total Stars Earned:",
     value: (data) => data.stars,
+  },
+  {
+    key: "contributedRepositories",
+    icon: "git-merge",
+    label: "Contributed Repositories:",
+    value: (data) => data.contributedRepositories,
   },
   {
     key: "commits",
@@ -101,6 +127,12 @@ const statDefinitions: Array<{
     value: (data) => data.repositoryContributions,
   },
   {
+    key: "restrictedContributions",
+    icon: "chart-dots",
+    label: "Restricted Contributions:",
+    value: (data) => data.restrictedContributions,
+  },
+  {
     key: "contributions",
     icon: "chart-dots",
     label: "Total Contributions:",
@@ -118,14 +150,13 @@ export class GitHubStatsWidget {
   constructor(private readonly config: GitHubStatsConfig = {}) {}
 
   render(data: GitHubStatsData): string {
+    const theme = this.config.theme ?? themes.default;
     const title = escapeXml(
       this.config.title ??
         (data.username ? `${data.username}'s GitHub Stats` : "GitHub Stats"),
     );
 
-    const visibleStatKeys = this.config.visibleStats?.length
-      ? this.config.visibleStats
-      : statDefinitions.map((stat) => stat.key);
+    const visibleStatKeys = this.config.visibleStats ?? statDefinitions.map((stat) => stat.key);
 
     const rows = statDefinitions
       .filter((stat) => visibleStatKeys.includes(stat.key))
@@ -142,11 +173,14 @@ export class GitHubStatsWidget {
         }
 
         return {
-          icon: getGitHubIcon(stat.icon, {
-            size: 16,
-            color: "#58a6ff",
-            strokeWidth: 1.8,
-          }),
+          icon:
+            this.config.showIcons === false
+              ? ""
+              : getGitHubIcon(stat.icon, {
+                  size: 16,
+                  color: theme.accent,
+                  strokeWidth: 1.8,
+                }),
           label: stat.label,
           value,
         };
@@ -168,9 +202,8 @@ export class GitHubStatsWidget {
           width="500"
           height="${cardHeight}"
           rx="${this.config.borderRadius ?? 6}"
-          fill="#1b1d29"
-          stroke="#58a6ff"
-          stroke-width="1.5"
+          fill="#1a1917"
+          ${this.config.hideBorder ? "" : `stroke="${theme.border}" stroke-width="1.5"`}
         />
 
         ${
@@ -179,7 +212,7 @@ export class GitHubStatsWidget {
             : `<text
                 x="20"
                 y="30"
-                fill="#a371f7"
+                fill="${theme.title}"
                 font-size="16"
                 font-weight="700"
               >
@@ -191,6 +224,7 @@ export class GitHubStatsWidget {
           .map((row, index) =>
             renderStatRow({
               ...row,
+              theme,
               y: 60 + index * 20,
             }),
           )

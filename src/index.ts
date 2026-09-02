@@ -1,5 +1,14 @@
 import { fetchPublicGitHubUser } from "./data/github/client";
-import { GitHubStatsWidget } from "./widgets/github-stats/github-stats";
+import { themes, type ThemeName } from "./core/theme";
+import {
+  GitHubStatsWidget,
+  type GitHubStatKey,
+} from "./widgets/github-stats/github-stats";
+import {
+  GitHubLanguagesWidget,
+  GitHubMiniBadgeWidget,
+  GitHubSparklineWidget,
+} from "./widgets/github-embeds";
 import type { GitHubStatsData } from "./widgets/github-stats/types";
 
 const BACKEND_STATS_URL = "http://localhost:3001/api/github/stats";
@@ -15,12 +24,62 @@ export const sampleGitHubStatsData: GitHubStatsData = {
   followers: 100,
 };
 
+let latestData: GitHubStatsData = sampleGitHubStatsData;
+let selectedTheme: ThemeName = "default";
+let selectedMode = "stats";
+
+function updateGeneratedCode(): void {
+  if (typeof document === "undefined") return;
+
+  const username =
+    (document.getElementById("github-username") as HTMLInputElement | null)
+      ?.value.trim() || "Namit-Rana6";
+  const theme =
+    (document.getElementById("theme") as HTMLSelectElement | null)?.value ||
+    selectedTheme;
+  const radius =
+    (document.getElementById("border-radius") as HTMLInputElement | null)
+      ?.value || "6";
+  const embed = selectedMode === "stats" ? "stats" : selectedMode;
+  const params = new URLSearchParams({ username, theme, radius });
+  const link = `${window.location.origin}/api/${embed}?${params}`;
+  const values: Record<string, string> = {
+    link,
+    markdown: `![GitHub ${embed} for ${username}](${link})`,
+    html: `<img src="${link}" alt="GitHub ${embed} for ${username}" />`,
+  };
+
+  Object.entries(values).forEach(([key, value]) => {
+    const output = document.querySelector(`[data-generated="${key}"]`);
+    if (output) output.textContent = value;
+  });
+}
+
 export function renderGitHubStatsPreview(
   preview: HTMLElement | null,
   data: GitHubStatsData = sampleGitHubStatsData,
+  options: ConstructorParameters<typeof GitHubStatsWidget>[0] = {},
 ): void {
-  const widget = new GitHubStatsWidget();
-  const svg = widget.render(data);
+  latestData = data;
+  if (selectedMode !== "stats") {
+    if (preview) {
+      preview.innerHTML = `<div class="coming-soon"><div class="coming-soon-emoji">🚀</div><strong>COMING SOON</strong></div>`;
+    }
+    return;
+  }
+
+  const embedOptions = { ...options, theme: options.theme ?? themes[selectedTheme] };
+  let svg: string;
+
+  if (selectedMode === "languages") {
+    svg = new GitHubLanguagesWidget(embedOptions).render(data);
+  } else if (selectedMode === "badge") {
+    svg = new GitHubMiniBadgeWidget(embedOptions).render(data);
+  } else if (selectedMode === "sparkline") {
+    svg = new GitHubSparklineWidget(embedOptions).render(data);
+  } else {
+    svg = new GitHubStatsWidget(embedOptions).render(data);
+  }
 
   if (preview) {
     preview.innerHTML = svg;
@@ -31,7 +90,7 @@ async function fetchGitHubStatsFromBackend(
   username: string,
 ): Promise<GitHubStatsData> {
   const response = await fetch(
-    `${BACKEND_STATS_URL}?username=${encodeURIComponent(username)}`,
+    `${BACKEND_STATS_URL}?username=${encodeURIComponent(username)}&theme=${selectedTheme}`,
   );
 
   if (!response.ok) {
@@ -53,8 +112,78 @@ if (typeof document !== "undefined") {
   const form = document.getElementById("github-user-form");
   const input = document.getElementById("github-username") as HTMLInputElement | null;
   const status = document.getElementById("status");
+  const titleInput = document.getElementById("custom-title") as HTMLInputElement | null;
+  const radiusInput = document.getElementById("border-radius") as HTMLInputElement | null;
+  const radiusValue = document.getElementById("border-radius-value");
+  const iconsInput = document.getElementById("show-icons") as HTMLInputElement | null;
+  const borderInput = document.getElementById("hide-border") as HTMLInputElement | null;
+  const titleVisibilityInput = document.getElementById("hide-title") as HTMLInputElement | null;
+  const themeInput = document.getElementById("theme") as HTMLSelectElement | null;
+  const statInputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>("input[data-stat-key]"),
+  );
+
+  const rerender = () => {
+    if (radiusValue && radiusInput) radiusValue.textContent = radiusInput.value;
+    renderGitHubStatsPreview(preview, latestData, {
+      title: titleInput?.value.trim() || undefined,
+      borderRadius: Number(radiusInput?.value || 6),
+      showIcons: iconsInput?.checked,
+      hideBorder: borderInput?.checked,
+      hideTitle: titleVisibilityInput?.checked,
+      theme: themes[selectedTheme],
+      visibleStats: statInputs
+        .filter((statInput) => statInput.checked)
+        .map((statInput) => statInput.dataset.statKey as GitHubStatKey),
+    });
+    updateGeneratedCode();
+  };
 
   renderGitHubStatsPreview(preview);
+  updateGeneratedCode();
+
+  [titleInput, radiusInput, iconsInput, borderInput, titleVisibilityInput, ...statInputs].forEach((control) => {
+    control?.addEventListener("input", rerender);
+    control?.addEventListener("change", rerender);
+  });
+  input?.addEventListener("input", updateGeneratedCode);
+
+  document.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("[data-mode]").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      selectedMode = button.dataset.mode ?? "stats";
+      updateGeneratedCode();
+      if (selectedMode === "stats") {
+        rerender();
+        if (status) status.textContent = "Live preview refreshes automatically";
+        return;
+      }
+
+      renderGitHubStatsPreview(preview, latestData);
+      if (status) status.textContent = `${button.textContent} coming soon`;
+    });
+  });
+
+  themeInput?.addEventListener("change", () => {
+    selectedTheme = themeInput.value as ThemeName;
+    rerender();
+  });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const output = document.querySelector(
+        `[data-generated="${button.dataset.copy}"]`,
+      );
+      if (!output?.textContent) return;
+      await navigator.clipboard.writeText(output.textContent);
+      const original = button.textContent;
+      button.textContent = "COPIED";
+      window.setTimeout(() => {
+        button.textContent = original;
+      }, 1200);
+    });
+  });
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();

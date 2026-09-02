@@ -1,8 +1,11 @@
+import type { WidgetTheme } from "../../core/theme";
+
 export interface StatRowOptions {
   icon: string;
   label: string;
   value: string | number;
   y: number;
+  theme: WidgetTheme;
 }
 
 export function renderStatRow({
@@ -10,6 +13,7 @@ export function renderStatRow({
   label,
   value,
   y,
+  theme,
 }: StatRowOptions): string {
   return `
     <g>
@@ -22,7 +26,7 @@ export function renderStatRow({
         y="${y}"
         dominant-baseline="middle"
         font-size="12"
-        fill="#e6edf3"
+        fill="${theme.text}"
       >
         ${label}
       </text>
@@ -34,7 +38,7 @@ export function renderStatRow({
         text-anchor="end"
         font-size="12"
         font-weight="600"
-        fill="#ffffff"
+        fill="${theme.value}"
       >
         ${value}
       </text>
