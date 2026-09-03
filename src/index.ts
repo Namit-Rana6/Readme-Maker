@@ -29,6 +29,19 @@ let selectedTheme: ThemeName | "custom" = "default";
 let customTheme: WidgetTheme = { ...themes.default };
 let selectedMode = "stats";
 let selectedLayout: "standard" | "hidden" = "standard";
+const supportedStatKeys = new Set<GitHubStatKey>([
+  "username",
+  "name",
+  "followers",
+  "following",
+  "repositories",
+  "commits",
+  "issues",
+  "pullRequests",
+  "pullRequestReviews",
+  "repositoryContributions",
+  "contributions",
+]);
 
 function getSelectedTheme(): WidgetTheme {
   return selectedTheme === "custom" ? customTheme : themes[selectedTheme];
@@ -61,7 +74,10 @@ function updateGeneratedCode(): void {
     document.querySelectorAll<HTMLInputElement>("input[data-stat-key]:checked"),
   )
     .map((input) => input.dataset.statKey)
-    .filter((key): key is string => Boolean(key));
+    .filter(
+      (key): key is GitHubStatKey =>
+        Boolean(key) && supportedStatKeys.has(key as GitHubStatKey),
+    );
   if (selectedStats.length) params.set("stats", selectedStats.join(","));
   if (selectedLayout === "hidden") params.set("layout", "hidden");
   if (selectedTheme === "custom") {
