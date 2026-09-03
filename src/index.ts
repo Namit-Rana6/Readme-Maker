@@ -13,18 +13,7 @@ import type { GitHubStatsData } from "./widgets/github-stats/types";
 
 const BACKEND_STATS_URL = "/api/github/stats";
 
-export const sampleGitHubStatsData: GitHubStatsData = {
-  username: "Namit Rana",
-  stars: 1,
-  commits: 87,
-  pullRequests: 12,
-  issues: 4,
-  codingHours: 63.1,
-  repositories: 27,
-  followers: 100,
-};
-
-let latestData: GitHubStatsData = sampleGitHubStatsData;
+let latestData: GitHubStatsData | null = null;
 let selectedTheme: ThemeName | "custom" = "default";
 let customTheme: WidgetTheme = { ...themes.default };
 let selectedMode = "stats";
@@ -100,10 +89,16 @@ function updateGeneratedCode(): void {
 
 export function renderGitHubStatsPreview(
   preview: HTMLElement | null,
-  data: GitHubStatsData = sampleGitHubStatsData,
+  data: GitHubStatsData | null = latestData,
   options: ConstructorParameters<typeof GitHubStatsWidget>[0] = {},
 ): void {
   latestData = data;
+  if (!data) {
+    if (preview) {
+      preview.innerHTML = `<div class="coming-soon"><strong>Enter a GitHub username</strong></div>`;
+    }
+    return;
+  }
   if (selectedMode !== "stats" || selectedLayout === "hidden") {
     if (preview) {
       preview.innerHTML = `<div class="coming-soon"><div class="coming-soon-emoji">🚀</div><strong>COMING SOON</strong></div>`;
@@ -188,7 +183,7 @@ if (typeof document !== "undefined") {
     updateGeneratedCode();
   };
 
-  renderGitHubStatsPreview(preview);
+  renderGitHubStatsPreview(preview, latestData);
   updateGeneratedCode();
   updateThemePalette();
 
@@ -201,6 +196,7 @@ if (typeof document !== "undefined") {
       selectedTheme = name as ThemeName;
       if (themeInput) themeInput.value = name;
       if (themeTrigger) themeTrigger.textContent = option.querySelector(".theme-option-name")?.textContent ?? name;
+      latestData = data;
       rerender();
       updateThemePalette();
     });

@@ -7,11 +7,9 @@ describe("GitHubStatsWidget", () => {
 
     const svg = widget.render({
       username: "Namit Rana",
-      stars: 1,
       commits: 87,
       pullRequests: 12,
       issues: 4,
-      codingHours: 63.1,
       contributions: 129,
       repositories: 27,
       followers: 100,
@@ -26,11 +24,9 @@ describe("GitHubStatsWidget", () => {
 
     const svg = widget.render({
       username: "Namit Rana",
-      stars: 1,
       commits: 87,
       pullRequests: 12,
       issues: 4,
-      codingHours: 63.1,
       contributions: 129,
       repositories: 27,
       followers: 100,
@@ -41,12 +37,11 @@ describe("GitHubStatsWidget", () => {
 
   it("shrinks the card when only a few stats are selected", () => {
     const widget = new GitHubStatsWidget({
-      visibleStats: ["stars", "commits"],
+      visibleStats: ["repositories", "commits"],
     });
 
     const svg = widget.render({
       username: "Namit Rana",
-      stars: 1,
       commits: 87,
       pullRequests: 12,
       issues: 4,
@@ -57,7 +52,7 @@ describe("GitHubStatsWidget", () => {
     });
 
     expect(svg).toContain('height="120"');
-    expect(svg).toContain("Total Stars Earned:");
+    expect(svg).toContain("Public Repositories:");
     expect(svg).toContain("Commits:");
   });
 
@@ -66,17 +61,15 @@ describe("GitHubStatsWidget", () => {
 
     const svg = widget.render({
       username: "Namit Rana",
-      stars: 1,
       commits: 87,
       pullRequests: undefined,
       issues: 4,
-      codingHours: undefined,
       contributions: 129,
       repositories: 27,
       followers: 100,
     } as any);
 
-    expect(svg).toContain("Total Stars Earned:");
+    expect(svg).toContain("Public Repositories:");
     expect(svg).toContain("Commits:");
     expect(svg).not.toContain("Total Pull Requests:");
     expect(svg).not.toContain("Coding Hours:");
@@ -89,14 +82,13 @@ describe("GitHubStatsWidget", () => {
       username: "Namit Rana",
       followers: 100,
       repositories: 27,
-      stars: 1,
       commits: 87,
       issues: 4,
       pullRequests: 12,
     });
 
-    expect(svg).toContain('height="180"');
+    expect(svg).toContain('height="160"');
     expect(svg).toContain('y="30"');
-    expect(svg).toContain('y="150"');
+    expect(svg).toContain('y="130"');
   });
 });

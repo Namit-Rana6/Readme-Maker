@@ -13,19 +13,13 @@ export type GitHubStatKey =
   | "bio"
   | "followers"
   | "following"
-  | "gists"
-  | "organizations"
   | "repositories"
-  | "stars"
-  | "contributedRepositories"
   | "commits"
   | "issues"
   | "pullRequests"
   | "pullRequestReviews"
   | "repositoryContributions"
-  | "restrictedContributions"
-  | "contributions"
-  | "codingHours";
+  | "contributions";
 
 export interface GitHubStatsConfig {
   title?: string;
@@ -67,34 +61,10 @@ const statDefinitions: Array<{
     value: (data) => data.following,
   },
   {
-    key: "gists",
-    icon: "file-description",
-    label: "Public Gists:",
-    value: (data) => data.gists,
-  },
-  {
-    key: "organizations",
-    icon: "users",
-    label: "Organizations:",
-    value: (data) => data.organizations,
-  },
-  {
     key: "repositories",
     icon: "book-2",
     label: "Public Repositories:",
     value: (data) => data.repositories,
-  },
-  {
-    key: "stars",
-    icon: "star",
-    label: "Total Stars Earned:",
-    value: (data) => data.stars,
-  },
-  {
-    key: "contributedRepositories",
-    icon: "git-merge",
-    label: "Contributed Repositories:",
-    value: (data) => data.contributedRepositories,
   },
   {
     key: "commits",
@@ -127,22 +97,10 @@ const statDefinitions: Array<{
     value: (data) => data.repositoryContributions,
   },
   {
-    key: "restrictedContributions",
-    icon: "chart-dots",
-    label: "Restricted Contributions:",
-    value: (data) => data.restrictedContributions,
-  },
-  {
     key: "contributions",
     icon: "chart-dots",
     label: "Total Contributions:",
     value: (data) => data.contributions,
-  },
-  {
-    key: "codingHours",
-    icon: "clock",
-    label: "Coding Hours:",
-    value: (data) => data.codingHours,
   },
 ];
 
