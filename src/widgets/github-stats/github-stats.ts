@@ -6,11 +6,13 @@ import {
   type GitHubIconName,
 } from "../../core/icons/github-icons.ts";
 import { themes, type WidgetTheme } from "../../core/theme.ts";
+// @ts-expect-error — plain JS module
+import { STAT_DEFINITIONS } from "./stat-definitions.js";
 
+// Stat keys supported by the Stats Card — must match STAT_DEFINITIONS exactly.
 export type GitHubStatKey =
   | "username"
   | "name"
-  | "bio"
   | "followers"
   | "following"
   | "repositories"
@@ -30,79 +32,22 @@ export interface GitHubStatsConfig {
   theme?: WidgetTheme;
   visibleStats?: GitHubStatKey[];
 }
+
+// Build the rich stat definition array from the shared JS module so the
+// frontend widget and the API renderer cannot have different stat lists.
 const statDefinitions: Array<{
   key: GitHubStatKey;
   icon: GitHubIconName;
   label: string;
   value: (data: GitHubStatsData) => string | number | undefined | null;
-}> = [
-  {
-    key: "username",
-    icon: "user",
-    label: "Username:",
-    value: (data) => data.username,
-  },
-  {
-    key: "name",
-    icon: "user",
-    label: "Name:",
-    value: (data) => data.name,
-  },
-  {
-    key: "followers",
-    icon: "users",
-    label: "Followers:",
-    value: (data) => data.followers,
-  },
-  {
-    key: "following",
-    icon: "user-plus",
-    label: "Following:",
-    value: (data) => data.following,
-  },
-  {
-    key: "repositories",
-    icon: "book-2",
-    label: "Public Repositories:",
-    value: (data) => data.repositories,
-  },
-  {
-    key: "commits",
-    icon: "git-commit",
-    label: "Commits:",
-    value: (data) => data.commits,
-  },
-  {
-    key: "issues",
-    icon: "bug",
-    label: "Total Issues:",
-    value: (data) => data.issues,
-  },
-  {
-    key: "pullRequests",
-    icon: "git-pull-request",
-    label: "Total Pull Requests:",
-    value: (data) => data.pullRequests,
-  },
-  {
-    key: "pullRequestReviews",
-    icon: "message-check",
-    label: "Total PR Reviews:",
-    value: (data) => data.pullRequestReviews,
-  },
-  {
-    key: "repositoryContributions",
-    icon: "git-merge",
-    label: "Repository Contributions:",
-    value: (data) => data.repositoryContributions,
-  },
-  {
-    key: "contributions",
-    icon: "chart-dots",
-    label: "Total Contributions:",
-    value: (data) => data.contributions,
-  },
-];
+}> = (STAT_DEFINITIONS as [GitHubStatKey, GitHubIconName, string][]).map(
+  ([key, icon, label]) => ({
+    key,
+    icon,
+    label,
+    value: (data: GitHubStatsData) => (data as Record<string, unknown>)[key] as string | number | undefined | null,
+  }),
+);
 
 export class GitHubStatsWidget {
   private readonly config: GitHubStatsConfig;
@@ -118,34 +63,31 @@ export class GitHubStatsWidget {
         (data.username ? `${data.username}'s GitHub Stats` : "GitHub Stats"),
     );
 
-    const visibleStatKeys = this.config.visibleStats ?? statDefinitions.map((stat) => stat.key);
+    const visibleStatKeys =
+      this.config.visibleStats ?? statDefinitions.map((stat) => stat.key);
+
+    const ICON_SIZE   = 16;
+    const ICON_STROKE = 1.8;
+    const ICON_X      = 20;
 
     const rows = statDefinitions
       .filter((stat) => visibleStatKeys.includes(stat.key))
       .map((stat) => {
         const value = stat.value(data);
 
-        if (
-          value === undefined ||
-          value === null ||
-          value === "" ||
-          value === 0
-        ) {
+        if (value === undefined || value === null || value === "" || value === 0) {
           return null;
         }
 
-        return {
-          icon:
-            this.config.showIcons === false
-              ? ""
-              : getGitHubIcon(stat.icon, {
-                  size: 16,
-                  color: theme.accent,
-                  strokeWidth: 1.8,
-                }),
-          label: stat.label,
-          value,
-        };
+        const iconG = this.config.showIcons === false
+          ? ""
+          : getGitHubIcon(stat.icon, {
+              size: ICON_SIZE,
+              color: theme.accent,
+              strokeWidth: ICON_STROKE,
+            });
+
+        return { iconG, icon: iconG, label: stat.label, value, iconX: ICON_X };
       })
       .filter((row): row is NonNullable<typeof row> => row !== null);
 
@@ -172,21 +114,15 @@ export class GitHubStatsWidget {
         ${
           this.config.hideTitle
             ? ""
-            : `<text
-                x="20"
-                y="30"
-                fill="${theme.title}"
-                font-size="16"
-                font-weight="700"
-              >
-                ${title}
-              </text>`
+            : `<text x="20" y="30" fill="${theme.title}" font-size="16" font-weight="700">${title}</text>`
         }
 
         ${rows
           .map((row, index) =>
             renderStatRow({
-              ...row,
+              icon: row.icon,
+              label: row.label,
+              value: row.value,
               theme,
               y: firstRowY + index * 20,
             }),
