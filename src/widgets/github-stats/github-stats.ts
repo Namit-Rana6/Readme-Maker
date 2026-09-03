@@ -1,11 +1,11 @@
-import type { GitHubStatsData } from "./types";
-import { renderStatRow } from "./stat-row";
-import { escapeXml } from "../../core/svg/escape";
+import type { GitHubStatsData } from "./types.ts";
+import { renderStatRow } from "./stat-row.ts";
+import { escapeXml } from "../../core/svg/escape.ts";
 import {
   getGitHubIcon,
   type GitHubIconName,
-} from "../../core/icons/github-icons";
-import { themes, type WidgetTheme } from "../../core/theme";
+} from "../../core/icons/github-icons.ts";
+import { themes, type WidgetTheme } from "../../core/theme.ts";
 
 export type GitHubStatKey =
   | "username"
@@ -147,7 +147,11 @@ const statDefinitions: Array<{
 ];
 
 export class GitHubStatsWidget {
-  constructor(private readonly config: GitHubStatsConfig = {}) {}
+  private readonly config: GitHubStatsConfig;
+
+  constructor(config: GitHubStatsConfig = {}) {
+    this.config = config;
+  }
 
   render(data: GitHubStatsData): string {
     const theme = this.config.theme ?? themes.default;
@@ -190,6 +194,7 @@ export class GitHubStatsWidget {
     const cardHeight = this.config.hideTitle
       ? 40 + rows.length * 20
       : 80 + rows.length * 20;
+    const firstRowY = this.config.hideTitle ? 30 : 60;
 
     return `
       <svg
@@ -202,7 +207,7 @@ export class GitHubStatsWidget {
           width="500"
           height="${cardHeight}"
           rx="${this.config.borderRadius ?? 6}"
-          fill="#1a1917"
+          fill="${theme.background}"
           ${this.config.hideBorder ? "" : `stroke="${theme.border}" stroke-width="1.5"`}
         />
 
@@ -225,7 +230,7 @@ export class GitHubStatsWidget {
             renderStatRow({
               ...row,
               theme,
-              y: 60 + index * 20,
+              y: firstRowY + index * 20,
             }),
           )
           .join("")}

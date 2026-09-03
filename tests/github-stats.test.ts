@@ -81,4 +81,22 @@ describe("GitHubStatsWidget", () => {
     expect(svg).not.toContain("Total Pull Requests:");
     expect(svg).not.toContain("Coding Hours:");
   });
+
+  it("keeps rows inside the card when the title is hidden", () => {
+    const widget = new GitHubStatsWidget({ hideTitle: true });
+
+    const svg = widget.render({
+      username: "Namit Rana",
+      followers: 100,
+      repositories: 27,
+      stars: 1,
+      commits: 87,
+      issues: 4,
+      pullRequests: 12,
+    });
+
+    expect(svg).toContain('height="180"');
+    expect(svg).toContain('y="30"');
+    expect(svg).toContain('y="150"');
+  });
 });

@@ -1,4 +1,4 @@
-import type { WidgetTheme } from "../../core/theme";
+import type { WidgetTheme } from "../../core/theme.ts";
 
 export interface StatRowOptions {
   icon: string;
@@ -17,7 +17,7 @@ export function renderStatRow({
 }: StatRowOptions): string {
   return `
     <g>
-      <g transform="translate(20 ${y - 10}) scale(0.7)">
+      <g transform="translate(20 ${y - 6.5}) scale(0.7)">
         ${icon}
       </g>
 

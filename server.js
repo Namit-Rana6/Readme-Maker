@@ -1,8 +1,15 @@
 import http from "node:http";
 import { fetchGitHubStats } from "./src/data/github/client.ts";
 import { resolveTheme } from "./src/core/theme.ts";
+import { GitHubStatsWidget } from "./src/widgets/github-stats/github-stats.ts";
 
 const PORT = Number(process.env.PORT || 3001);
+const statKeys = new Set([
+  "username", "name", "followers", "following", "gists", "organizations",
+  "repositories", "stars", "contributedRepositories", "commits", "issues",
+  "pullRequests", "pullRequestReviews", "repositoryContributions",
+  "restrictedContributions", "contributions", "codingHours",
+]);
 
 const sendJson = (res, statusCode, payload) => {
   res.writeHead(statusCode, {
@@ -28,14 +35,21 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (url.pathname !== "/api/github/stats") {
+  if (url.pathname !== "/api/github/stats" && url.pathname !== "/api/stats") {
     sendJson(res, 404, { error: "Not found" });
     return;
   }
 
   const username = url.searchParams.get("username")?.trim();
   const themeName = url.searchParams.get("theme") ?? "default";
-  const theme = resolveTheme(themeName);
+  const customKeys = ["background", "border", "title", "text", "value", "accent"];
+  const hasCustomTheme = customKeys.every((key) => url.searchParams.has(key));
+  const theme = hasCustomTheme
+    ? customKeys.reduce((customTheme, key) => {
+        customTheme[key] = url.searchParams.get(key) ?? "";
+        return customTheme;
+      }, {})
+    : resolveTheme(themeName);
   const token = process.env.GITHUB_TOKEN;
 
   if (!username) {
@@ -55,6 +69,24 @@ const server = http.createServer(async (req, res) => {
 
   try {
     const stats = await fetchGitHubStats(username, token);
+
+    if (url.pathname === "/api/stats") {
+      const requestedStats = url.searchParams.get("stats")?.split(",") ?? [];
+      const visibleStats = requestedStats.filter((key) => statKeys.has(key));
+      const widget = new GitHubStatsWidget({
+        theme,
+        borderRadius: Number(url.searchParams.get("radius") ?? 6),
+        hideTitle: url.searchParams.get("layout") === "hidden",
+        hideBorder: url.searchParams.get("layout") === "hidden",
+        visibleStats: visibleStats.length ? visibleStats : undefined,
+      });
+      res.writeHead(200, {
+        "Content-Type": "image/svg+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=300",
+      });
+      res.end(widget.render(stats));
+      return;
+    }
 
     sendJson(res, 200, { ...stats, theme: themeName, themeColors: theme });
   } catch (error) {

@@ -5,7 +5,10 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "vitest run"
+    "dev": "vite --host 0.0.0.0 --port 4175",
+    "build": "vite build",
+    "test": "vitest run",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",

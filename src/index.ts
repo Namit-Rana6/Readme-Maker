@@ -1,5 +1,5 @@
 import { fetchPublicGitHubUser } from "./data/github/client";
-import { themes, type ThemeName } from "./core/theme";
+import { themes, type ThemeName, type WidgetTheme } from "./core/theme";
 import {
   GitHubStatsWidget,
   type GitHubStatKey,
@@ -11,7 +11,7 @@ import {
 } from "./widgets/github-embeds";
 import type { GitHubStatsData } from "./widgets/github-stats/types";
 
-const BACKEND_STATS_URL = "http://localhost:3001/api/github/stats";
+const BACKEND_STATS_URL = "/api/github/stats";
 
 export const sampleGitHubStatsData: GitHubStatsData = {
   username: "Namit Rana",
@@ -25,8 +25,25 @@ export const sampleGitHubStatsData: GitHubStatsData = {
 };
 
 let latestData: GitHubStatsData = sampleGitHubStatsData;
-let selectedTheme: ThemeName = "default";
+let selectedTheme: ThemeName | "custom" = "default";
+let customTheme: WidgetTheme = { ...themes.default };
 let selectedMode = "stats";
+let selectedLayout: "standard" | "hidden" = "standard";
+
+function getSelectedTheme(): WidgetTheme {
+  return selectedTheme === "custom" ? customTheme : themes[selectedTheme];
+}
+
+function updateThemePalette(): void {
+  if (typeof document === "undefined") return;
+
+  const theme = getSelectedTheme();
+  document.querySelectorAll<HTMLElement>("[data-palette-color]").forEach((swatch) => {
+    const colorKey = swatch.dataset.paletteColor as keyof typeof theme;
+    swatch.style.backgroundColor = theme[colorKey];
+    swatch.title = `${colorKey}: ${theme[colorKey]}`;
+  });
+}
 
 function updateGeneratedCode(): void {
   if (typeof document === "undefined") return;
@@ -34,14 +51,24 @@ function updateGeneratedCode(): void {
   const username =
     (document.getElementById("github-username") as HTMLInputElement | null)
       ?.value.trim() || "Namit-Rana6";
-  const theme =
-    (document.getElementById("theme") as HTMLSelectElement | null)?.value ||
-    selectedTheme;
+  const theme = selectedTheme;
   const radius =
     (document.getElementById("border-radius") as HTMLInputElement | null)
       ?.value || "6";
   const embed = selectedMode === "stats" ? "stats" : selectedMode;
   const params = new URLSearchParams({ username, theme, radius });
+  const selectedStats = Array.from(
+    document.querySelectorAll<HTMLInputElement>("input[data-stat-key]:checked"),
+  )
+    .map((input) => input.dataset.statKey)
+    .filter((key): key is string => Boolean(key));
+  if (selectedStats.length) params.set("stats", selectedStats.join(","));
+  if (selectedLayout === "hidden") params.set("layout", "hidden");
+  if (selectedTheme === "custom") {
+    Object.entries(customTheme).forEach(([key, value]) => {
+      params.set(key, value);
+    });
+  }
   const link = `${window.location.origin}/api/${embed}?${params}`;
   const values: Record<string, string> = {
     link,
@@ -61,14 +88,14 @@ export function renderGitHubStatsPreview(
   options: ConstructorParameters<typeof GitHubStatsWidget>[0] = {},
 ): void {
   latestData = data;
-  if (selectedMode !== "stats") {
+  if (selectedMode !== "stats" || selectedLayout === "hidden") {
     if (preview) {
       preview.innerHTML = `<div class="coming-soon"><div class="coming-soon-emoji">🚀</div><strong>COMING SOON</strong></div>`;
     }
     return;
   }
 
-  const embedOptions = { ...options, theme: options.theme ?? themes[selectedTheme] };
+  const embedOptions = { ...options, theme: options.theme ?? getSelectedTheme() };
   let svg: string;
 
   if (selectedMode === "languages") {
@@ -119,6 +146,12 @@ if (typeof document !== "undefined") {
   const borderInput = document.getElementById("hide-border") as HTMLInputElement | null;
   const titleVisibilityInput = document.getElementById("hide-title") as HTMLInputElement | null;
   const themeInput = document.getElementById("theme") as HTMLSelectElement | null;
+  const themeTrigger = document.getElementById("theme-picker-trigger");
+  const themeOptions = document.getElementById("theme-options");
+  const customColorInputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>("input[data-custom-color]"),
+  );
+  const applyCustomTheme = document.getElementById("apply-custom-theme");
   const statInputs = Array.from(
     document.querySelectorAll<HTMLInputElement>("input[data-stat-key]"),
   );
@@ -129,9 +162,9 @@ if (typeof document !== "undefined") {
       title: titleInput?.value.trim() || undefined,
       borderRadius: Number(radiusInput?.value || 6),
       showIcons: iconsInput?.checked,
-      hideBorder: borderInput?.checked,
-      hideTitle: titleVisibilityInput?.checked,
-      theme: themes[selectedTheme],
+      hideTitle: titleVisibilityInput?.checked || selectedLayout === "hidden",
+      hideBorder: borderInput?.checked || selectedLayout === "hidden",
+      theme: getSelectedTheme(),
       visibleStats: statInputs
         .filter((statInput) => statInput.checked)
         .map((statInput) => statInput.dataset.statKey as GitHubStatKey),
@@ -141,6 +174,22 @@ if (typeof document !== "undefined") {
 
   renderGitHubStatsPreview(preview);
   updateGeneratedCode();
+  updateThemePalette();
+
+  themeOptions && Object.entries(themes).forEach(([name, theme]) => {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "theme-option";
+    option.innerHTML = `<span class="theme-option-name">${name.replace(/([A-Z])/g, " $1")}</span><span class="theme-swatches">${Object.values(theme).map((color) => `<span style="background:${color}"></span>`).join("")}</span>`;
+    option.addEventListener("click", () => {
+      selectedTheme = name as ThemeName;
+      if (themeInput) themeInput.value = name;
+      if (themeTrigger) themeTrigger.textContent = option.querySelector(".theme-option-name")?.textContent ?? name;
+      rerender();
+      updateThemePalette();
+    });
+    themeOptions.appendChild(option);
+  });
 
   [titleInput, radiusInput, iconsInput, borderInput, titleVisibilityInput, ...statInputs].forEach((control) => {
     control?.addEventListener("input", rerender);
@@ -165,9 +214,43 @@ if (typeof document !== "undefined") {
     });
   });
 
+  document.querySelectorAll<HTMLButtonElement>("[data-layout]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedLayout = button.dataset.layout === "hidden" ? "hidden" : "standard";
+      document.querySelectorAll("[data-layout]").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      rerender();
+      if (status) {
+        status.textContent = selectedLayout === "hidden"
+          ? "Hidden layout coming soon"
+          : "Live preview refreshes automatically";
+      }
+    });
+  });
+
   themeInput?.addEventListener("change", () => {
     selectedTheme = themeInput.value as ThemeName;
+    if (themeTrigger) themeTrigger.textContent = themeInput.selectedOptions[0]?.textContent ?? themeInput.value;
     rerender();
+    updateThemePalette();
+  });
+
+  customColorInputs.forEach((input) => {
+    input.addEventListener("input", () => {
+      const key = input.dataset.customColor as keyof WidgetTheme;
+      customTheme[key] = input.value;
+      selectedTheme = "custom";
+      if (themeTrigger) themeTrigger.textContent = "Custom theme";
+      rerender();
+      updateThemePalette();
+    });
+  });
+
+  applyCustomTheme?.addEventListener("click", () => {
+    selectedTheme = "custom";
+    if (themeTrigger) themeTrigger.textContent = "Custom theme";
+    rerender();
+    updateThemePalette();
   });
 
   document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
@@ -215,7 +298,7 @@ if (typeof document !== "undefined") {
         }
       }
 
-      renderGitHubStatsPreview(preview, data);
+      rerender();
     } catch (error) {
       if (status) {
         status.textContent =

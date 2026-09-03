@@ -1,5 +1,5 @@
-import type { GitHubStatsData } from "../../widgets/github-stats/types";
-import type { GitHubUserResponse } from "./types";
+import type { GitHubStatsData } from "../../widgets/github-stats/types.ts";
+import type { GitHubUserResponse } from "./types.ts";
 
 export function mapGitHubUserResponseToStats(
   response: GitHubUserResponse,
