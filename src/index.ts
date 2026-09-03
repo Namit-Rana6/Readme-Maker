@@ -74,7 +74,7 @@ function updateGeneratedCode(): void {
       params.set(key, value);
     });
   }
-  const link = `${window.location.origin}/api/${embed}?${params}`;
+  const link = `https://readme-maker-ashen.vercel.app/api/${embed}?${params}`;
   const values: Record<string, string> = {
     link,
     markdown: `![GitHub ${embed} for ${username}](${link})`,
