@@ -1,72 +1,155 @@
 # Readme Maker
 
-Readme Maker is an open-source GitHub widget generator. Enter a GitHub username, choose a widget mode and theme, select the stats you want, and copy a ready-to-use link, Markdown snippet, or HTML embed.
+Generate GitHub stats cards for your profile README in seconds. Enter a username, pick a theme, choose your stats, and copy a single Markdown line.
 
-The project is currently in alpha. The codebase is intentionally small and easy to extend with new widget types, themes, GitHub metrics, and output formats.
+**Live:** [readme-maker-ashen.vercel.app](https://readme-maker-ashen.vercel.app)
+
+---
+
+## Preview
+
+![GitHub Stats for Namit-Rana6](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=default&radius=6)
+
+---
 
 ## Features
 
-- GitHub username lookup through a server-side GitHub GraphQL request
-- SVG stats card with selectable metrics
-- Theme system shared by every widget renderer
-- Preset themes plus custom color palettes
-- Border radius, title, border, icon, and layout controls
-- Generated link, Markdown, and HTML embed snippets
-- Coming-soon states for Languages, Mini Badge, and Sparkline modes
-- Responsive browser interface
-- Public REST fallback for profile data when the backend is unavailable
-- Automated mapper and widget tests with Vitest
+- **Stats Card** — selectable metrics rendered as a clean SVG
+- **9 built-in themes** — Default, Dark, Ocean, Sunset, Cyberpunk, Midnight, Tokyo Night, Emerald, Sunset Glow
+- **Custom theme** — pick any six hex colors directly in the builder
+- **Full option parity** — custom title, border radius, show/hide icons, hide border, hide title, hidden compact layout
+- **Single URL contract** — the generated Link, Markdown, and HTML all point to the same `/api/stats` endpoint with the exact same parameters shown in the live preview
+- **Vercel serverless** — frontend and API deploy together, no separate backend needed
+- **Public REST fallback** — profile data loads even without a valid token
+- **67 automated tests** with Vitest
+
+---
+
+## Supported Stats
+
+| Key | Label |
+|---|---|
+| `username` | Username |
+| `name` | Name |
+| `followers` | Followers |
+| `following` | Following |
+| `repositories` | Public Repositories |
+| `commits` | Commits |
+| `issues` | Total Issues |
+| `pullRequests` | Total Pull Requests |
+| `pullRequestReviews` | Total PR Reviews |
+| `repositoryContributions` | Repository Contributions |
+| `contributions` | Total Contributions |
+
+---
+
+## Embed URL
+
+All three output formats — Link, Markdown, HTML — use this URL shape:
+
+```
+https://readme-maker-ashen.vercel.app/api/stats?<params>
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `username` | string | — | GitHub login (**required**) |
+| `theme` | string | `default` | Preset theme name |
+| `radius` | number | `6` | SVG border radius |
+| `title` | string | `{username}'s GitHub Stats` | Custom card title |
+| `stats` | comma-separated keys | all | Which stats to show |
+| `showIcons` | `1` | off | Show row icons |
+| `hideBorder` | `1` | off | Remove the card border |
+| `hideTitle` | `1` | off | Remove the card title |
+| `layout` | `hidden` | — | Shorthand for hideBorder + hideTitle |
+| `background` `border` `title` `text` `value` `accent` | hex | — | Custom theme colors (all six required) |
+
+### Example
+
+```md
+![GitHub Stats](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=ocean&radius=8&stats=followers,commits,contributions&showIcons=1)
+```
+
+---
+
+## Themes
+
+| Name | Preview |
+|---|---|
+| `default` | ![default](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=default&stats=commits,contributions&hideTitle=1&radius=6) |
+| `ocean` | ![ocean](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=ocean&stats=commits,contributions&hideTitle=1&radius=6) |
+| `sunset` | ![sunset](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=sunset&stats=commits,contributions&hideTitle=1&radius=6) |
+| `cyberpunk` | ![cyberpunk](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=cyberpunk&stats=commits,contributions&hideTitle=1&radius=6) |
+| `midnight` | ![midnight](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=midnight&stats=commits,contributions&hideTitle=1&radius=6) |
+| `tokyoNight` | ![tokyoNight](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=tokyoNight&stats=commits,contributions&hideTitle=1&radius=6) |
+| `emerald` | ![emerald](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=emerald&stats=commits,contributions&hideTitle=1&radius=6) |
+| `sunsetGlow` | ![sunsetGlow](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=sunsetGlow&stats=commits,contributions&hideTitle=1&radius=6) |
+| `dark` | ![dark](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=dark&stats=commits,contributions&hideTitle=1&radius=6) |
+
+---
 
 ## Tech Stack
 
-- TypeScript for browser and data-layer code
-- HTML and CSS for the interface
-- Vite for local frontend development and production builds
-- Node.js HTTP server for the backend API
-- GitHub GraphQL API for authenticated stats
-- GitHub REST API for the public fallback
-- SVG for generated widgets
-- Vitest for tests
-- npm and Git for project tooling
+| Concern | Tool |
+|---|---|
+| Language | TypeScript |
+| Frontend build | Vite |
+| API / backend | Vercel Serverless Functions (Node.js) |
+| GitHub data | GraphQL API (authenticated) + REST API (public fallback) |
+| Widget output | SVG |
+| Tests | Vitest |
+| Hosting | Vercel |
+
+---
 
 ## Project Structure
 
-```text
+```
 .
-├── index.html                       # Main generator webpage
-├── server.js                        # Node backend and SVG endpoint
+├── index.html                         # Builder UI
+├── server.js                          # Local Node dev server
 ├── api/
-│   ├── _github.js                   # Shared Vercel API handler
-│   ├── github/stats.js              # JSON stats function
-│   └── stats.js                     # SVG widget function
-├── vite.config.ts                   # Local /api proxy to the Node server
+│   ├── _github.js                     # Shared request handler
+│   ├── render-stats.js                # SVG renderer (server-side)
+│   ├── github/stats.js                # JSON stats endpoint
+│   └── stats.js                       # SVG stats endpoint
 ├── src/
-│   ├── index.ts                     # Browser entry and live controls
+│   ├── index.ts                       # Browser entry + live controls
 │   ├── core/
-│   │   ├── theme.ts                 # Theme contract and theme registry
-│   │   ├── icons/                   # Reusable SVG icons
-│   │   └── svg/                     # SVG escaping helpers
+│   │   ├── theme.ts                   # TS types, re-exports themes.js
+│   │   ├── themes.js                  # Shared theme registry (JS, used by API too)
+│   │   ├── icons/
+│   │   │   ├── github-icons.js        # Icon paths + getGitHubIcon() (shared)
+│   │   │   └── github-icons.ts        # TS re-export of github-icons.js
+│   │   └── svg/escape.ts             # XML escape helper
 │   ├── data/github/
-│   │   ├── client.ts                # GitHub API client
-│   │   ├── mapper.ts                # Raw response to widget data
-│   │   ├── queries.ts               # GraphQL query
-│   │   └── types.ts                 # GitHub response types
+│   │   ├── client.ts                  # fetch wrappers
+│   │   ├── mapper.ts                  # GraphQL response → widget data
+│   │   ├── queries.ts                 # GraphQL query string
+│   │   ├── runtime.js                 # Node-compatible fetch + mapper
+│   │   └── types.ts                   # GitHub response types
 │   └── widgets/
-│       ├── github-stats/            # Stats card renderer
-│       └── github-embeds.ts         # Additional embed renderers
-├── tests/                           # Vitest test suite
-└── scripts/                         # Local API verification scripts
+│       ├── github-embeds.ts           # Languages / Badge / Sparkline renderers
+│       └── github-stats/
+│           ├── github-stats.ts        # Stats Card widget (browser)
+│           ├── stat-definitions.js    # Canonical 11-stat list (shared)
+│           ├── stat-row.ts            # Single stat row renderer
+│           └── types.ts               # GitHubStatsData interface
+├── tests/
+│   ├── embed-url.test.ts              # URL generation + API renderer tests
+│   ├── github-stats.test.ts           # Widget unit tests
+│   └── github-data-map.test.ts        # Data mapper tests
+└── scripts/
+    └── load-github-user.mjs           # CLI GitHub lookup helper
 ```
 
-## Requirements
-
-- Node.js 22 or newer
-- npm
-- A GitHub personal access token for the server-side GraphQL request
+---
 
 ## Local Setup
 
-Clone the repository and install dependencies:
+**Requirements:** Node.js 22+, npm, a GitHub personal access token.
 
 ```bash
 git clone https://github.com/Namit-Rana6/Readme-Maker.git
@@ -74,189 +157,149 @@ cd Readme-Maker
 npm install
 ```
 
-Create a local `.env` file in the project root:
+Create `.env` in the project root:
 
 ```env
-GITHUB_TOKEN=your_github_token
+GITHUB_TOKEN=your_github_personal_access_token
 ```
 
-Never commit `.env` or expose the token in browser code.
+> Never commit `.env`. Never put the token in frontend code or generated snippets.
 
-Start the backend in one terminal:
+Start the local backend:
 
 ```bash
-node server.js
+npm start
+# or: node server.js
 ```
 
-Start the frontend in another terminal. The Vite proxy forwards `/api` requests to the local backend:
+Start the frontend dev server (proxies `/api` to `localhost:3001`):
 
 ```bash
-npx vite --host 0.0.0.0 --port 4175
+npm run dev
 ```
 
-Open [http://localhost:4175/](http://localhost:4175/) in a browser.
+Open [http://localhost:4175](http://localhost:4175).
 
-The backend health check is available at [http://localhost:3001/health](http://localhost:3001/health). The browser itself uses same-origin `/api/...` paths, so it does not contain a hardcoded production localhost URL.
+---
 
 ## Commands
 
-Run the complete test suite:
+| Command | Description |
+|---|---|
+| `npm run dev` | Start Vite dev server on port 4175 |
+| `npm start` | Start local Node API server on port 3001 |
+| `npm run build` | Build frontend to `dist/` |
+| `npm test` | Run the full Vitest test suite |
+| `node scripts/load-github-user.mjs <user>` | Test a GitHub GraphQL lookup directly |
 
-```bash
-npx vitest run
-```
+---
 
-Build the frontend:
+## Deployment (Vercel)
 
-```bash
-npx vite build
-```
+1. Push the repository to GitHub.
+2. Import the project in [vercel.com](https://vercel.com).
+3. Add `GITHUB_TOKEN` in **Project → Settings → Environment Variables**.
+4. Deploy — Vercel auto-detects the Vite frontend and the `api/` serverless functions.
 
-Verify a GitHub GraphQL lookup directly:
+No separate backend deploy is needed. `server.js` is only used for local development.
 
-```bash
-node scripts/load-github-user.mjs Namit-Rana6
-```
+---
 
-## API
+## Architecture Notes
 
-### Health check
+### Single source of truth
 
-```text
-GET /health
-```
+| Concern | Shared file | Consumers |
+|---|---|---|
+| Stat definitions | `src/widgets/github-stats/stat-definitions.js` | `github-stats.ts` (browser), `render-stats.js` (API) |
+| Theme registry | `src/core/themes.js` | `theme.ts` (browser), `_github.js` (API) |
+| Icon paths | `src/core/icons/github-icons.js` | `github-icons.ts` (browser), `render-stats.js` (API) |
 
-Returns:
+### SVG icon rendering
 
-```json
-{"ok":true}
-```
+Icons are inlined as `<g>` elements (paths only, no nested `<svg>`). GitHub's Markdown renderer silently drops nested `<svg>` elements, so this approach ensures icons appear identically in the Builder preview and in rendered READMEs.
 
-### GitHub stats data
+### URL contract
 
-```text
-GET /api/github/stats?username=Namit-Rana6&theme=ocean
-```
+`updateGeneratedCode()` in `src/index.ts` builds the embed URL from the current UI state. The same parameters are read by `api/_github.js` and passed to `api/render-stats.js`. What you see in the live preview is exactly what gets rendered from the URL.
 
-The token is read only by the backend from `GITHUB_TOKEN`. The response contains the mapped GitHub stats and the resolved theme metadata.
-
-### SVG widget
-
-```text
-GET /api/stats?username=Namit-Rana6&theme=ocean&stats=username,followers,commits&radius=8
-```
-
-The SVG endpoint accepts:
-
-- `username`: GitHub login
-- `theme`: preset theme name
-- `stats`: comma-separated selected stat keys
-- `radius`: SVG border radius
-- `layout=hidden`: compact hidden layout
-- custom theme colors: `background`, `border`, `title`, `text`, `value`, and `accent`
-
-Example Markdown output:
-
-```md
-![GitHub Stats](http://localhost:3001/api/stats?username=Namit-Rana6&theme=ocean&stats=username%2Cfollowers%2Ccommits)
-```
+---
 
 ## Theme System
 
-Themes are defined in [src/core/theme.ts](src/core/theme.ts) and implement six color slots:
+Themes live in `src/core/themes.js` and implement six color slots:
 
-```ts
-export interface WidgetTheme {
-  background: string;
-  border: string;
-  title: string;
-  text: string;
-  value: string;
-  accent: string;
+```js
+{
+  background: string,  // card fill
+  border:     string,  // card stroke
+  title:      string,  // heading text
+  text:       string,  // label text
+  value:      string,  // stat value text
+  accent:     string,  // icon stroke + highlights
 }
 ```
 
-To add a preset, add one object to the `themes` registry. The stats card and the other widget renderers receive the resolved theme instead of selecting colors themselves.
+To add a theme: add one entry to `themes` in `src/core/themes.js`. It automatically appears in the builder dropdown and is available as a URL parameter.
+
+---
 
 ## Security
 
-- Keep `GITHUB_TOKEN` on the backend only.
-- Do not put the token in `index.html`, `src/index.ts`, generated snippets, or client-side environment variables.
-- Use a least-privilege GitHub token appropriate for the data you need.
-- Configure environment variables through the hosting provider’s secret settings in production.
-- Add rate limiting and request caching before exposing the API publicly at scale.
+- `GITHUB_TOKEN` is read server-side only and never exposed to the browser.
+- User-controlled text (username, title) is XML-escaped before insertion into SVG.
+- Use a least-privilege token (read-only public data).
+- Set `GITHUB_TOKEN` through your hosting provider's secret management — never hardcode it.
+- Add rate limiting and caching before exposing the API at public scale.
 
-## Deployment
-
-The frontend and backend are separate runtime concerns:
-
-1. Build the frontend with `npx vite build`.
-2. Serve the generated `dist/` directory from a static host or web server.
-3. Run `node server.js` on a Node.js service.
-4. Set `GITHUB_TOKEN` and `PORT` in the deployment provider’s environment settings.
-5. Update the frontend backend URL in `src/index.ts` from the local URL to the deployed backend URL.
-6. Configure CORS to allow only the deployed frontend origin instead of `*`.
-7. Test `/health`, `/api/github/stats`, and `/api/stats` after deployment.
-
-The current frontend uses same-origin `/api` paths. During local development, `vite.config.ts` proxies those paths to `http://localhost:3001`; on Vercel, the `api/` functions handle them on the same deployment. No production localhost URL or separate backend origin is required.
-
-Vercel detects the Vite frontend and the functions in `api/` automatically. Deploy from the repository, add `GITHUB_TOKEN` in the Vercel project environment variables, and use the production URL for the generated embeds. `server.js` remains available as a local Node development server and is not the production Vercel entrypoint.
+---
 
 ## Contributing
 
-Contributions are welcome. This project is in alpha, so improvements, bug fixes, new themes, new metrics, accessibility work, documentation, and new widget ideas are all useful.
+Contributions are welcome — new themes, new metrics, bug fixes, accessibility improvements, and documentation updates.
 
-### Development workflow
+### Workflow
 
-1. Fork the repository.
-2. Create a focused branch from `main`:
+1. Fork the repository and create a branch from `main`:
+   ```bash
+   git checkout -b feat/your-change
+   ```
+2. Install dependencies: `npm install`
+3. Make a focused change and add/update tests.
+4. Verify both checks pass:
+   ```bash
+   npm run build
+   npm test
+   ```
+5. Check the browser flow locally for any UI or output changes.
+6. Open a pull request against `main` with a clear description.
 
-	```bash
-	git checkout -b feat/your-change
-	```
+### Guidelines
 
-3. Install dependencies with `npm install`.
-4. Make one focused change at a time.
-5. Add or update tests for behavior changes.
-6. Run both checks:
+- Keep PRs small and focused on one thing.
+- Follow the existing TypeScript + shared-JS architecture.
+- Use `STAT_DEFINITIONS` for any new stats — do not add keys only to one side.
+- Use `themes.js` for any new themes — do not add them only to the API.
+- Escape all user-controlled values before putting them in SVG.
+- Do not commit `.env`, `dist/`, `node_modules/`, or tokens.
+- Update this README when adding public API parameters.
 
-	```bash
-	npx vite build
-	npx vitest run
-	```
+### PR Checklist
 
-7. Check the browser flow locally when changing the UI or generated output.
-8. Commit with a clear message and open a pull request against `main`.
+- [ ] Focused, single-purpose change
+- [ ] Tests added or updated
+- [ ] `npm test` passes
+- [ ] `npm run build` passes
+- [ ] No secrets or generated files committed
+- [ ] README updated if API or setup changed
+- [ ] Browser preview checked for UI changes
 
-### Contribution guidelines
-
-- Keep pull requests small and focused.
-- Preserve the existing TypeScript, SVG, and theme architecture.
-- Do not commit `.env`, tokens, generated `dist/` output, or `node_modules/`.
-- Use the shared `WidgetTheme` contract for all new widget colors.
-- Escape user-controlled text before inserting it into SVG.
-- Keep undefined and zero-value stat behavior intentional and tested.
-- Avoid unrelated formatting or dependency changes.
-- Update the README when adding public API parameters or setup requirements.
-- Include a short explanation of the behavior changed and how it was tested.
-- For UI changes, include a screenshot or a clear browser verification note when possible.
-
-### Pull request checklist
-
-- [ ] The change has a clear, focused purpose.
-- [ ] Tests were added or updated where needed.
-- [ ] `npx vitest run` passes.
-- [ ] `npx vite build` passes.
-- [ ] No secrets or generated dependencies are included.
-- [ ] The README or API documentation is updated when necessary.
-- [ ] The browser preview was checked for frontend changes.
+---
 
 ## License
 
-This project currently uses the ISC license declared in `package.json`.
+ISC — see `package.json`.
 
-## Community
+---
 
-Readme Maker is built in the open. Feature ideas, issue reports, documentation improvements, and code contributions are always welcome at:
-
-https://github.com/Namit-Rana6/Readme-Maker
+[readme-maker-ashen.vercel.app](https://readme-maker-ashen.vercel.app) · [GitHub](https://github.com/Namit-Rana6/Readme-Maker) · [Issues](https://github.com/Namit-Rana6/Readme-Maker/issues)
