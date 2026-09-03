@@ -196,7 +196,6 @@ if (typeof document !== "undefined") {
       selectedTheme = name as ThemeName;
       if (themeInput) themeInput.value = name;
       if (themeTrigger) themeTrigger.textContent = option.querySelector(".theme-option-name")?.textContent ?? name;
-      latestData = data;
       rerender();
       updateThemePalette();
     });
@@ -310,6 +309,7 @@ if (typeof document !== "undefined") {
         }
       }
 
+      latestData = data;
       rerender();
     } catch (error) {
       if (status) {
