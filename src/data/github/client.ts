@@ -1,14 +1,12 @@
-import { GITHUB_STATS_QUERY } from "./queries.ts";
-import { mapGitHubUserResponseToStats } from "./mapper.ts";
+import {
+  fetchGitHubStatsRuntime,
+  mapGitHubUserResponseToStats,
+} from "./runtime.js";
 import type {
-  GitHubGraphQLError,
   GitHubPublicUserResponse,
-  GitHubUserResponse,
 } from "./types.ts";
 
 export { mapGitHubUserResponseToStats };
-
-const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
 
 export function mapPublicGitHubUserResponseToStats(
   response: GitHubPublicUserResponse,
@@ -51,43 +49,5 @@ export async function fetchGitHubStats(
   username: string,
   token: string,
 ) {
-  const response = await fetch(GITHUB_GRAPHQL_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      "User-Agent": "Readme-Maker",
-    },
-    body: JSON.stringify({
-      query: GITHUB_STATS_QUERY,
-      variables: {
-        username,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `GitHub API request failed: ${response.status} ${response.statusText}`,
-    );
-  }
-
-  const result = (await response.json()) as {
-    data?: GitHubUserResponse;
-    errors?: GitHubGraphQLError[];
-  };
-
-  if (result.errors?.length) {
-    throw new Error(
-      `GitHub GraphQL error: ${result.errors
-        .map((error) => error.message)
-        .join(", ")}`,
-    );
-  }
-
-  if (!result.data) {
-    throw new Error("GitHub API returned no data.");
-  }
-
-  return mapGitHubUserResponseToStats(result.data);
+  return fetchGitHubStatsRuntime(username, token);
 }

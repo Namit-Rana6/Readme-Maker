@@ -1,6 +1,5 @@
-import { fetchGitHubStats } from "../src/data/github/client.ts";
-import { resolveTheme } from "../src/core/theme.ts";
-import { GitHubStatsWidget } from "../src/widgets/github-stats/github-stats.ts";
+import { fetchGitHubStatsRuntime } from "../src/data/github/runtime.js";
+import { renderStatsSvg } from "./render-stats.js";
 
 const statKeys = new Set([
   "username", "name", "followers", "following", "gists", "organizations",
@@ -12,7 +11,15 @@ const colorKeys = ["background", "border", "title", "text", "value", "accent"];
 
 function getTheme(url) {
   const hasCustomTheme = colorKeys.every((key) => url.searchParams.has(key));
-  if (!hasCustomTheme) return resolveTheme(url.searchParams.get("theme") ?? "default");
+  if (!hasCustomTheme) {
+    const themes = {
+      default: { background: "#0d1117", border: "#30363d", title: "#a371f7", text: "#e6edf3", value: "#ffffff", accent: "#58a6ff" },
+      dark: { background: "#000000", border: "#333333", title: "#ffffff", text: "#cccccc", value: "#ffffff", accent: "#ffffff" },
+      ocean: { background: "#071a2b", border: "#164e63", title: "#67e8f9", text: "#bae6fd", value: "#ffffff", accent: "#22d3ee" },
+      sunset: { background: "#1a1917", border: "#5c3328", title: "#ff7c61", text: "#e6ded7", value: "#fffaf5", accent: "#8ee0c0" },
+    };
+    return themes[url.searchParams.get("theme")] ?? themes.default;
+  }
 
   return Object.fromEntries(colorKeys.map((key) => [key, url.searchParams.get(key)]));
 }
@@ -38,13 +45,13 @@ export async function handleStatsRequest(req, res, svg = false) {
   }
 
   try {
-    const stats = await fetchGitHubStats(username, token);
+    const stats = await fetchGitHubStatsRuntime(username, token);
     const theme = getTheme(url);
 
     if (svg) {
       const requestedStats = url.searchParams.get("stats")?.split(",") ?? [];
       const visibleStats = requestedStats.filter((key) => statKeys.has(key));
-      const widget = new GitHubStatsWidget({
+      const svgMarkup = renderStatsSvg(stats, {
         theme,
         borderRadius: Number(url.searchParams.get("radius") ?? 6),
         hideTitle: url.searchParams.get("layout") === "hidden",
@@ -53,7 +60,7 @@ export async function handleStatsRequest(req, res, svg = false) {
       });
       res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=300");
-      res.status(200).send(widget.render(stats));
+      res.status(200).send(svgMarkup);
       return;
     }
 
