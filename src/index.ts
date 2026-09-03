@@ -59,6 +59,23 @@ function updateGeneratedCode(): void {
       ?.value || "6";
   const embed = selectedMode === "stats" ? "stats" : selectedMode;
   const params = new URLSearchParams({ username, theme, radius });
+
+  // Custom title
+  const titleVal = (document.getElementById("custom-title") as HTMLInputElement | null)?.value.trim();
+  if (titleVal) params.set("title", titleVal);
+
+  // showIcons — only set when explicitly toggled on (default off)
+  const showIconsChecked = (document.getElementById("show-icons") as HTMLInputElement | null)?.checked;
+  if (showIconsChecked) params.set("showIcons", "1");
+
+  // hideBorder
+  const hideBorderChecked = (document.getElementById("hide-border") as HTMLInputElement | null)?.checked;
+  if (hideBorderChecked) params.set("hideBorder", "1");
+
+  // hideTitle
+  const hideTitleChecked = (document.getElementById("hide-title") as HTMLInputElement | null)?.checked;
+  if (hideTitleChecked) params.set("hideTitle", "1");
+
   const selectedStats = Array.from(
     document.querySelectorAll<HTMLInputElement>("input[data-stat-key]:checked"),
   )

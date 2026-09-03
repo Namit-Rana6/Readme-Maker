@@ -53,9 +53,15 @@ export async function handleStatsRequest(req, res, svg = false) {
       const visibleStats = requestedStats.filter((key) => statKeys.has(key));
       const svgMarkup = renderStatsSvg(stats, {
         theme,
+        title: url.searchParams.get("title") ?? undefined,
         borderRadius: Number(url.searchParams.get("radius") ?? 6),
-        hideTitle: url.searchParams.get("layout") === "hidden",
-        hideBorder: url.searchParams.get("layout") === "hidden",
+        showIcons: url.searchParams.get("showIcons") === "1",
+        hideBorder:
+          url.searchParams.get("hideBorder") === "1" ||
+          url.searchParams.get("layout") === "hidden",
+        hideTitle:
+          url.searchParams.get("hideTitle") === "1" ||
+          url.searchParams.get("layout") === "hidden",
         visibleStats: visibleStats.length ? visibleStats : undefined,
       });
       res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
