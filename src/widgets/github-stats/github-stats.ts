@@ -26,6 +26,7 @@ export type GitHubStatKey =
 export interface GitHubStatsConfig {
   title?: string;
   hideTitle?: boolean;
+  centreTitle?: boolean;
   borderRadius?: number;
   showIcons?: boolean;
   hideBorder?: boolean;
@@ -114,7 +115,7 @@ export class GitHubStatsWidget {
         ${
           this.config.hideTitle
             ? ""
-            : `<text x="20" y="30" fill="${theme.title}" font-size="16" font-weight="700">${title}</text>`
+            : `<text x="${this.config.centreTitle ? "250" : "20"}" y="30" fill="${theme.title}" font-size="16" font-weight="700"${this.config.centreTitle ? ` text-anchor="middle"` : ""}>${title}</text>`
         }
 
         ${rows

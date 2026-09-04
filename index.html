@@ -10,21 +10,63 @@
       body { margin: 0; min-height: 100vh; color: var(--text); background: radial-gradient(circle at 85% 0%, #3a2420 0, transparent 28%), radial-gradient(circle at 0% 100%, #15342d 0, transparent 24%), var(--bg); font-family: "Segoe UI", sans-serif; }
       .shell { width: min(1280px, calc(100% - 48px)); margin: 0 auto; padding: 34px 0 54px; }
       .topbar, .hero { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-      .topbar { margin-bottom: 58px; border-bottom: 1px solid rgba(57, 54, 49, .8); padding-bottom: 18px; }
-      .brand { display: flex; align-items: center; gap: 13px; color: #fff; font-weight: 700; font-size: 18px; }
-      .brand-copy { display: flex; flex-direction: column; gap: 3px; }
-      .brand-copy small { color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: .03em; }
-      .brand-mark { display: flex; align-items: end; justify-content: center; gap: 3px; width: 38px; height: 38px; border: 1px solid #d9624e; border-radius: 11px; padding: 9px 8px; background: var(--purple); box-shadow: 0 8px 22px rgba(255, 124, 97, .16); }
-      .brand-mark span { display: block; width: 4px; border-radius: 3px; background: #1a1917; }
-      .brand-mark span:nth-child(1) { height: 9px; }
-      .brand-mark span:nth-child(2) { height: 15px; }
-      .brand-mark span:nth-child(3) { height: 21px; }
-      .header-context { display: flex; align-items: center; gap: 9px; margin-left: 22px; border-left: 1px solid var(--line); padding-left: 22px; color: var(--muted); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
-      .header-context b { color: var(--blue); font-size: 10px; }
-      nav { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
-      nav a { border: 1px solid transparent; border-radius: 7px; padding: 8px 11px; color: inherit; text-decoration: none; }
+      .topbar { margin-bottom: 58px; border-bottom: 1px solid rgba(57, 54, 49, .55); padding-bottom: 20px; }
+
+      /* ── Brand ── */
+      .brand { display: flex; align-items: center; gap: 0; color: #fff; }
+      .brand-mark {
+        display: flex; align-items: flex-end; justify-content: center; gap: 3px;
+        width: 40px; height: 40px;
+        border: 1px solid rgba(217, 98, 78, .55);
+        border-radius: 12px; padding: 9px 9px 8px;
+        background: linear-gradient(145deg, #ff8c72, #e8593a);
+        box-shadow: 0 6px 20px rgba(255, 100, 70, .25), inset 0 1px 0 rgba(255,255,255,.15);
+        flex-shrink: 0;
+      }
+      .brand-mark span { display: block; width: 4px; border-radius: 3px; background: rgba(30,18,14,.85); }
+      .brand-mark span:nth-child(1) { height: 8px; }
+      .brand-mark span:nth-child(2) { height: 14px; }
+      .brand-mark span:nth-child(3) { height: 20px; }
+      .brand-copy { display: flex; flex-direction: column; gap: 1px; margin-left: 12px; }
+      .brand-copy strong { font-size: 15px; font-weight: 700; color: #f0ece3; letter-spacing: -.01em; }
+      .brand-copy small { color: #6b6560; font-size: 11px; font-weight: 400; letter-spacing: .01em; }
+
+      /* ── Lab badge ── */
+      .header-badge {
+        display: flex; align-items: center; gap: 7px;
+        margin-left: 20px; padding-left: 20px;
+        border-left: 1px solid rgba(57,54,49,.7);
+      }
+      .header-badge-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        border: 1px solid rgba(57,54,49,.9);
+        border-radius: 999px; padding: 4px 11px 4px 8px;
+        background: rgba(26,25,23,.6);
+        color: #8ee0c0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+      }
+      .header-badge-pill::before {
+        content: "";
+        display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+        background: #8ee0c0; box-shadow: 0 0 8px #8ee0c0;
+        flex-shrink: 0;
+      }
+
+      /* ── Nav ── */
+      nav { display: flex; align-items: center; gap: 6px; }
+      nav a {
+        border: 1px solid transparent; border-radius: 8px;
+        padding: 7px 13px;
+        color: #8c8880; font-size: 13px; font-weight: 500;
+        text-decoration: none;
+        transition: border-color .15s, color .15s, background .15s;
+      }
       nav a:hover { border-color: var(--line); color: var(--text); background: rgba(255,255,255,.03); }
-      nav a:last-child { border-color: var(--line); color: var(--text); }
+      nav a.nav-github {
+        border-color: rgba(57,54,49,.9);
+        color: #f0ece3;
+        background: rgba(26,25,23,.5);
+      }
+      nav a.nav-github:hover { background: rgba(255,255,255,.06); }
       .hero { align-items: end; margin-bottom: 48px; }
       h1 { margin: 0 0 8px; color: #f2f6fb; font-size: clamp(30px, 4vw, 46px); letter-spacing: 0; }
       .hero p { margin: 0; color: var(--muted); font-size: 16px; }
@@ -37,27 +79,27 @@
       .field label span { color: #697585; font-weight: 400; }
       input[type="text"] { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; color: var(--text); background: var(--surface); font: inherit; outline: none; }
       input[type="text"]:focus { border-color: var(--blue); }
-      select { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; color: var(--text); background: #151c26; font: inherit; outline: none; }
+      select { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; color: var(--text); background: var(--surface); font: inherit; outline: none; }
       select:focus { border-color: var(--blue); }
       .theme-control { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: end; }
       .theme-picker { position: relative; }
-      .theme-picker-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; color: var(--text); background: #151c26; font: inherit; text-align: left; cursor: pointer; }
+      .theme-picker-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; color: var(--text); background: var(--surface); font: inherit; text-align: left; cursor: pointer; }
       .theme-picker-trigger::after { content: "▾"; color: var(--muted); }
       .theme-picker[open] .theme-picker-trigger::after { content: "▴"; }
-      .theme-menu { position: absolute; z-index: 5; top: calc(100% + 8px); left: 0; width: min(430px, 100vw - 56px); max-height: 360px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: #151c26; box-shadow: 0 18px 42px rgba(0,0,0,.4); }
+      .theme-menu { position: absolute; z-index: 5; top: calc(100% + 8px); left: 0; width: min(430px, 100vw - 56px); max-height: 360px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: var(--surface); box-shadow: 0 18px 42px rgba(0,0,0,.4); }
       .theme-option { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; width: 100%; border: 0; border-radius: 7px; padding: 10px; color: var(--text); background: transparent; text-align: left; cursor: pointer; }
-      .theme-option:hover, .theme-option.selected { background: #222d3a; }
+      .theme-option:hover, .theme-option.selected { background: #1e2028; }
       .theme-option-name { font-size: 13px; font-weight: 600; }
       .theme-swatches { display: flex; gap: 4px; }
       .theme-swatches span { width: 16px; height: 16px; border: 1px solid rgba(255,255,255,.3); border-radius: 50%; }
       .theme-swatches span:first-child { border-radius: 4px; }
-      .custom-theme { margin-top: 8px; border-top: 1px solid var(--line); padding: 12px 8px 4px; }
+      .custom-theme { margin-bottom: 8px; border-bottom: 1px solid var(--line); padding: 4px 8px 12px; }
       .custom-theme summary { color: var(--blue); cursor: pointer; font-size: 13px; font-weight: 700; }
-      .custom-colors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; padding: 14px 0 0; }
-      .custom-color { display: grid; grid-template-columns: minmax(0, 1fr) 32px; align-items: center; gap: 10px; min-width: 0; min-height: 32px; color: var(--muted); font-size: 13px; text-transform: capitalize; }
-      .custom-color input[type="color"] { width: 28px; height: 28px; border: 0; padding: 0; border-radius: 50%; background: transparent; cursor: pointer; }
-      .custom-color input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-      .custom-color input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,.35); border-radius: 50%; }
+      .custom-colors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; padding: 12px 0 0; }
+      .custom-color { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--muted); font-size: 13px; text-transform: capitalize; }
+      .custom-color input[type="color"] { flex-shrink: 0; width: 22px; height: 22px; border: 1px solid rgba(255,255,255,.2); padding: 0; border-radius: 50%; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; }
+      .custom-color input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
+      .custom-color input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
       .custom-theme-apply { margin-top: 14px; border: 0; border-radius: 7px; padding: 9px 12px; color: #171614; background: var(--blue); font-size: 12px; font-weight: 700; cursor: pointer; }
       .palette-preview { display: flex; align-items: center; gap: 5px; height: 47px; padding: 0 2px; }
       .palette-swatch { width: 20px; height: 20px; border: 1px solid rgba(255,255,255,.28); border-radius: 50%; box-shadow: 0 0 0 2px rgba(0,0,0,.25); }
@@ -67,7 +109,8 @@
       .input-row button { border: 0; border-radius: 8px; padding: 0 20px; color: #1d1613; background: var(--purple); font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(255, 124, 97, .18); }
       .tabs, .segmented { display: flex; gap: 4px; border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
       .tabs button, .segmented button { flex: 1; border: 0; border-radius: 9px; padding: 11px 12px; color: var(--muted); background: transparent; font-weight: 600; cursor: pointer; }
-      .tabs button.active, .segmented button.active { color: #171614; background: var(--blue); }
+      .tabs button.active { color: #171614; background: var(--blue); }
+      .segmented button.active { color: var(--text); background: #2a2e3a; border: 1px solid var(--line); }
       .range-line { display: flex; justify-content: space-between; color: #8c98a6; font-size: 13px; }
       .range-line label { margin: 0; }
       .range-line strong { color: var(--blue); }
@@ -122,7 +165,7 @@
       .builder-page { display: none; }
       @media (max-width: 560px) { .custom-colors { grid-template-columns: 1fr; } }
       @media (max-width: 860px) { .code-grid { grid-template-columns: 1fr; } .community-note { align-items: flex-start; flex-direction: column; gap: 16px; } }
-      @media (max-width: 860px) { .shell { width: min(100% - 28px, 650px); padding-top: 22px; } .topbar { margin-bottom: 38px; } nav { display: none; } .hero { align-items: start; flex-direction: column; margin-bottom: 34px; } .workspace { grid-template-columns: 1fr; gap: 36px; } .preview-frame { padding: 14px; } .preview-stage { min-height: 300px; padding: 12px; } .site-footer { align-items: flex-start; flex-direction: column; gap: 8px; } }
+      @media (max-width: 860px) { .shell { width: min(100% - 28px, 650px); padding-top: 22px; } .topbar { margin-bottom: 38px; } nav { display: none; } .header-badge { display: none; } .hero { align-items: start; flex-direction: column; margin-bottom: 34px; } .workspace { grid-template-columns: 1fr; gap: 36px; } .preview-frame { padding: 14px; } .preview-stage { min-height: 300px; padding: 12px; } .site-footer { align-items: flex-start; flex-direction: column; gap: 8px; } }
     </style>
   </head>
   <body>
@@ -135,15 +178,32 @@
         <div class="home-actions"><a href="/builder">Open widget creator</a><a class="secondary" href="https://github.com/Namit-Rana6/Readme-Maker">View on GitHub</a></div>
       </section>
       <div class="builder-page" id="builder-page">
-      <header class="topbar" aria-label="Site header"><div class="brand"><a href="/" aria-label="Readme Maker home"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span></a><span class="brand-copy"><span>Readme Maker</span><small>GitHub widget generator</small></span><span class="header-context"><b>●</b> SVG widget lab</span></div><nav><a href="/">Home</a><a href="https://github.com/Namit-Rana6/Readme-Maker">GitHub</a></nav></header>
+      <header class="topbar" aria-label="Site header">
+        <div class="brand">
+          <a href="/" aria-label="Readme Maker home">
+            <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          </a>
+          <span class="brand-copy">
+            <strong>Readme Maker</strong>
+            <small>GitHub widget generator</small>
+          </span>
+          <div class="header-badge">
+            <span class="header-badge-pill">SVG Widget Lab</span>
+          </div>
+        </div>
+        <nav>
+          <a href="/">Home</a>
+          <a href="https://github.com/Namit-Rana6/Readme-Maker" class="nav-github">GitHub</a>
+        </nav>
+      </header>
       <section class="hero" id="try"><div><h1>Try it out</h1><p>Generate your embed, preview it, then copy a single line.</p></div><div class="live"><i></i> Live preview refreshes automatically</div></section>
       <section class="workspace">
         <form id="github-user-form">
           <p class="section-label">Embed type</p>
           <div class="tabs" role="tablist"><button class="active" type="button" data-mode="stats">Stats Card</button><button type="button" data-mode="languages">Languages</button><button type="button" data-mode="badge">Mini Badge</button><button type="button" data-mode="sparkline">Sparkline</button></div>
           <div class="field" style="margin-top:28px"><label for="github-username">GITHUB USERNAME</label><div class="input-row"><input id="github-username" type="text" value="Namit-Rana6" placeholder="Enter username"/><button type="submit">Load</button></div><div id="status" class="status">Live preview ready</div></div>
-          <div class="field"><label for="custom-title">CUSTOM TITLE <span>(OPTIONAL)</span></label><input id="custom-title" type="text" placeholder="My Awesome Stats"/></div>
-          <div class="field"><label for="theme">THEME</label><div class="theme-control"><details class="theme-picker" id="theme-picker"><summary class="theme-picker-trigger" id="theme-picker-trigger">Default</summary><div class="theme-menu" id="theme-menu"><div id="theme-options"></div><details class="custom-theme"><summary>Create your own theme</summary><div class="custom-colors"><label class="custom-color">Background<input type="color" data-custom-color="background" value="#0d1117"/></label><label class="custom-color">Border<input type="color" data-custom-color="border" value="#30363d"/></label><label class="custom-color">Title<input type="color" data-custom-color="title" value="#a371f7"/></label><label class="custom-color">Text<input type="color" data-custom-color="text" value="#e6edf3"/></label><label class="custom-color">Value<input type="color" data-custom-color="value" value="#ffffff"/></label><label class="custom-color">Accent<input type="color" data-custom-color="accent" value="#58a6ff"/></label></div><button type="button" class="custom-theme-apply" id="apply-custom-theme">Use custom theme</button></details></div></details><select id="theme" hidden><option value="default">Default</option><option value="dark">Dark</option><option value="ocean">Ocean</option><option value="sunset">Sunset</option><option value="cyberpunk">Cyberpunk</option><option value="midnight">Midnight</option><option value="tokyoNight">Tokyo Night</option><option value="emerald">Emerald</option><option value="sunsetGlow">Sunset Glow</option></select><div class="palette-preview" aria-label="Current theme palette"><span class="palette-swatch" data-palette-color="background"></span><span class="palette-swatch" data-palette-color="border"></span><span class="palette-swatch" data-palette-color="title"></span><span class="palette-swatch" data-palette-color="text"></span><span class="palette-swatch" data-palette-color="value"></span><span class="palette-swatch" data-palette-color="accent"></span></div></div></div>
+          <div class="field"><label for="custom-title">CUSTOM TITLE <span>(OPTIONAL)</span></label><input id="custom-title" type="text" placeholder="e.g. Dev Stats"/></div>
+          <div class="field"><label for="theme">THEME</label><div class="theme-control"><details class="theme-picker" id="theme-picker"><summary class="theme-picker-trigger" id="theme-picker-trigger">Default</summary><div class="theme-menu" id="theme-menu"><details class="custom-theme"><summary>Create your own theme</summary><div class="custom-colors"><label class="custom-color">Background<input type="color" data-custom-color="background" value="#0d1117"/></label><label class="custom-color">Border<input type="color" data-custom-color="border" value="#30363d"/></label><label class="custom-color">Title<input type="color" data-custom-color="title" value="#a371f7"/></label><label class="custom-color">Text<input type="color" data-custom-color="text" value="#e6edf3"/></label><label class="custom-color">Value<input type="color" data-custom-color="value" value="#ffffff"/></label><label class="custom-color">Accent<input type="color" data-custom-color="accent" value="#58a6ff"/></label></div><button type="button" class="custom-theme-apply" id="apply-custom-theme">Use custom theme</button></details><div id="theme-options"></div></div></details><select id="theme" hidden><option value="default">Default</option><option value="dark">Dark</option><option value="ocean">Ocean</option><option value="sunset">Sunset</option><option value="cyberpunk">Cyberpunk</option><option value="midnight">Midnight</option><option value="tokyoNight">Tokyo Night</option><option value="emerald">Emerald</option><option value="sunsetGlow">Sunset Glow</option></select><div class="palette-preview" aria-label="Current theme palette"><span class="palette-swatch" data-palette-color="background"></span><span class="palette-swatch" data-palette-color="border"></span><span class="palette-swatch" data-palette-color="title"></span><span class="palette-swatch" data-palette-color="text"></span><span class="palette-swatch" data-palette-color="value"></span><span class="palette-swatch" data-palette-color="accent"></span></div></div></div>
           <details class="stat-options"><summary>Choose stats</summary><div class="advanced-content"><div class="stat-picker">
             <label><input type="checkbox" data-stat-key="username" checked/> Username</label>
             <label><input type="checkbox" data-stat-key="name" checked/> Name</label>
@@ -159,7 +219,7 @@
           </div><p class="status">Choose which available GitHub stats appear in the card.</p></div></details>
           <div class="field"><div class="range-line"><label for="border-radius">BORDER RADIUS <strong id="border-radius-value">6</strong></label></div><input id="border-radius" type="range" min="0" max="18" step="1" value="6"/></div>
           <div class="field"><p class="section-label">Layout</p><div class="segmented"><button type="button" class="active" data-layout="standard">Standard</button><button type="button" data-layout="hidden">Hidden</button></div></div>
-          <div class="checks"><label><input id="show-icons" type="checkbox" checked/> Show Icons</label><label><input id="show-ring" type="checkbox" checked/> Show Ring</label><label><input id="hide-border" type="checkbox"/> Hide Border</label><label><input id="hide-title" type="checkbox"/> Hide Title</label></div>
+          <div class="checks"><label><input id="show-icons" type="checkbox" checked/> Show Icons</label><label><input id="hide-border" type="checkbox"/> Hide Border</label><label><input id="hide-title" type="checkbox"/> Hide Title</label><label><input id="centre-title" type="checkbox"/> Centre Title</label></div>
           
         </form>
         <section><p class="section-label">Live preview</p><div class="preview-frame"><div class="preview-stage"><div id="preview"></div></div></div></section>

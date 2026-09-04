@@ -8,6 +8,7 @@ import {
   GitHubLanguagesWidget,
   GitHubMiniBadgeWidget,
   GitHubSparklineWidget,
+  GitHubGridWidget,
 } from "./widgets/github-embeds";
 import type { GitHubStatsData } from "./widgets/github-stats/types";
 
@@ -116,7 +117,26 @@ export function renderGitHubStatsPreview(
     }
     return;
   }
-  if (selectedMode !== "stats" || selectedLayout === "hidden") {
+
+  // Hidden layout — render the 3×N grid card
+  if (selectedLayout === "hidden") {
+    const embedOptions = {
+      theme: getSelectedTheme(),
+      borderRadius: options.borderRadius,
+      title: options.title,
+      visibleStats: options.visibleStats as string[] | undefined,
+      showIcons: options.showIcons !== false,
+      hideBorder: options.hideBorder ?? false,
+      hideTitle: options.hideTitle ?? false,
+      centreTitle: (options as any).centreTitle ?? false,
+    };
+    const svg = new GitHubGridWidget(embedOptions).render(data);
+    if (preview) preview.innerHTML = svg;
+    return;
+  }
+
+  // Non-stats modes (coming soon)
+  if (selectedMode !== "stats") {
     if (preview) {
       preview.innerHTML = `<div class="coming-soon"><div class="coming-soon-emoji">🚀</div><strong>COMING SOON</strong></div>`;
     }
@@ -173,6 +193,7 @@ if (typeof document !== "undefined") {
   const iconsInput = document.getElementById("show-icons") as HTMLInputElement | null;
   const borderInput = document.getElementById("hide-border") as HTMLInputElement | null;
   const titleVisibilityInput = document.getElementById("hide-title") as HTMLInputElement | null;
+  const centreTitleInput = document.getElementById("centre-title") as HTMLInputElement | null;
   const themeInput = document.getElementById("theme") as HTMLSelectElement | null;
   const themeTrigger = document.getElementById("theme-picker-trigger");
   const themeOptions = document.getElementById("theme-options");
@@ -190,8 +211,9 @@ if (typeof document !== "undefined") {
       title: titleInput?.value.trim() || undefined,
       borderRadius: Number(radiusInput?.value || 6),
       showIcons: iconsInput?.checked,
-      hideTitle: titleVisibilityInput?.checked || selectedLayout === "hidden",
-      hideBorder: borderInput?.checked || selectedLayout === "hidden",
+      hideTitle: titleVisibilityInput?.checked,
+      hideBorder: borderInput?.checked,
+      centreTitle: centreTitleInput?.checked,
       theme: getSelectedTheme(),
       visibleStats: statInputs
         .filter((statInput) => statInput.checked)
@@ -199,7 +221,6 @@ if (typeof document !== "undefined") {
     });
     updateGeneratedCode();
   };
-
   renderGitHubStatsPreview(preview, latestData);
   updateGeneratedCode();
   updateThemePalette();
@@ -213,13 +234,16 @@ if (typeof document !== "undefined") {
       selectedTheme = name as ThemeName;
       if (themeInput) themeInput.value = name;
       if (themeTrigger) themeTrigger.textContent = option.querySelector(".theme-option-name")?.textContent ?? name;
+      // Close the picker dropdown
+      const picker = document.getElementById("theme-picker") as HTMLDetailsElement | null;
+      if (picker) picker.removeAttribute("open");
       rerender();
       updateThemePalette();
     });
     themeOptions.appendChild(option);
   });
 
-  [titleInput, radiusInput, iconsInput, borderInput, titleVisibilityInput, ...statInputs].forEach((control) => {
+  [titleInput, radiusInput, iconsInput, borderInput, titleVisibilityInput, centreTitleInput, ...statInputs].forEach((control) => {
     control?.addEventListener("input", rerender);
     control?.addEventListener("change", rerender);
   });
@@ -250,7 +274,7 @@ if (typeof document !== "undefined") {
       rerender();
       if (status) {
         status.textContent = selectedLayout === "hidden"
-          ? "Hidden layout coming soon"
+          ? "Grid layout — 3×N card"
           : "Live preview refreshes automatically";
       }
     });
