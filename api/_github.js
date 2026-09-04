@@ -1,5 +1,5 @@
 import { fetchGitHubStatsRuntime } from "../src/data/github/runtime.js";
-import { renderStatsSvg } from "./render-stats.js";
+import { renderStatsSvg, renderGridSvg } from "./render-stats.js";
 import { resolveTheme, COLOR_KEYS } from "../src/core/themes.js";
 import { STAT_KEYS } from "../src/widgets/github-stats/stat-definitions.js";
 
@@ -41,21 +41,30 @@ export async function handleStatsRequest(req, res, svg = false) {
     const theme = getTheme(url);
 
     if (svg) {
-      const requestedStats = url.searchParams.get("stats")?.split(",") ?? [];
-      // Filter against the canonical 11-stat allowlist
-      const visibleStats = requestedStats.filter((key) => STAT_KEYS.has(key));
+      const requestedStats  = url.searchParams.get("stats")?.split(",") ?? [];
+      const visibleStats    = requestedStats.filter((key) => STAT_KEYS.has(key));
+      const isHiddenLayout  = url.searchParams.get("layout") === "hidden";
+      const showIcons       = url.searchParams.get("showIcons") !== "0"; // default on
+      const hideBorder      = url.searchParams.get("hideBorder") === "1";
+      const hideTitle       = url.searchParams.get("hideTitle")  === "1";
+      const centreTitle     = url.searchParams.get("centreTitle") === "1";
+      const borderRadius    = Number(url.searchParams.get("radius") ?? 6);
+      const title           = url.searchParams.get("title") ?? undefined;
 
-      const isHiddenLayout = url.searchParams.get("layout") === "hidden";
-
-      const svgMarkup = renderStatsSvg(stats, {
+      const sharedOptions = {
         theme,
-        title:        url.searchParams.get("title") ?? undefined,
-        borderRadius: Number(url.searchParams.get("radius") ?? 6),
-        showIcons:    url.searchParams.get("showIcons") === "1",
-        hideBorder:   url.searchParams.get("hideBorder") === "1" || isHiddenLayout,
-        hideTitle:    url.searchParams.get("hideTitle") === "1" || isHiddenLayout,
+        title,
+        borderRadius,
+        showIcons,
+        hideBorder,
+        hideTitle,
+        centreTitle,
         visibleStats: visibleStats.length ? visibleStats : undefined,
-      });
+      };
+
+      const svgMarkup = isHiddenLayout
+        ? renderGridSvg(stats, sharedOptions)
+        : renderStatsSvg(stats, sharedOptions);
 
       res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=300");

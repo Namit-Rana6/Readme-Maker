@@ -65,10 +65,6 @@ function updateGeneratedCode(): void {
   const titleVal = (document.getElementById("custom-title") as HTMLInputElement | null)?.value.trim();
   if (titleVal) params.set("title", titleVal);
 
-  // showIcons — only set when explicitly toggled on (default off)
-  const showIconsChecked = (document.getElementById("show-icons") as HTMLInputElement | null)?.checked;
-  if (showIconsChecked) params.set("showIcons", "1");
-
   // hideBorder
   const hideBorderChecked = (document.getElementById("hide-border") as HTMLInputElement | null)?.checked;
   if (hideBorderChecked) params.set("hideBorder", "1");
@@ -76,6 +72,14 @@ function updateGeneratedCode(): void {
   // hideTitle
   const hideTitleChecked = (document.getElementById("hide-title") as HTMLInputElement | null)?.checked;
   if (hideTitleChecked) params.set("hideTitle", "1");
+
+  // centreTitle
+  const centreTitleChecked = (document.getElementById("centre-title") as HTMLInputElement | null)?.checked;
+  if (centreTitleChecked) params.set("centreTitle", "1");
+
+  // showIcons — omit param when checked (default on), set to "0" when unchecked
+  const showIconsChecked = (document.getElementById("show-icons") as HTMLInputElement | null)?.checked;
+  if (!showIconsChecked) params.set("showIcons", "0");
 
   const selectedStats = Array.from(
     document.querySelectorAll<HTMLInputElement>("input[data-stat-key]:checked"),
