@@ -120,7 +120,7 @@ export function renderGridSvg(stats, options = {}) {
 
 export function renderStatsSvg(stats, options = {}) {
   const theme      = options.theme;
-  const showIcons  = options.showIcons  === true;
+  const showIcons  = options.showIcons !== false; // default ON — matches renderGridSvg and builder default
   const hideTitle  = options.hideTitle  === true;
   const hideBorder = options.hideBorder === true;
   const centreTitle = options.centreTitle === true;

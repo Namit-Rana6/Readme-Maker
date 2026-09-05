@@ -32,7 +32,7 @@ describe("GitHubStatsWidget", () => {
       followers: 100,
     });
 
-    expect(svg).toContain("Namit Rana's GitHub Stats");
+    expect(svg).toContain("Namit Rana&#x27;s GitHub Stats");
   });
 
   it("shrinks the card when only a few stats are selected", () => {

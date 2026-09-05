@@ -61,7 +61,15 @@ function updateGeneratedCode(): void {
   const embed = selectedMode === "stats" ? "stats" : selectedMode;
   const params = new URLSearchParams({ username, theme, radius });
 
-  // Custom title
+  // Custom theme colors must be set FIRST — before title, so the title color
+  // key (#xxxxxx) cannot overwrite the user's custom title text param.
+  if (selectedTheme === "custom") {
+    Object.entries(customTheme).forEach(([key, value]) => {
+      params.set(key, value);
+    });
+  }
+
+  // Custom title — set after colors so it always wins over the "title" color key
   const titleVal = (document.getElementById("custom-title") as HTMLInputElement | null)?.value.trim();
   if (titleVal) params.set("title", titleVal);
 
@@ -91,11 +99,6 @@ function updateGeneratedCode(): void {
     );
   if (selectedStats.length) params.set("stats", selectedStats.join(","));
   if (selectedLayout === "hidden") params.set("layout", "hidden");
-  if (selectedTheme === "custom") {
-    Object.entries(customTheme).forEach(([key, value]) => {
-      params.set(key, value);
-    });
-  }
   const link = `https://readme-maker-ashen.vercel.app/api/${embed}?${params}`;
   const values: Record<string, string> = {
     link,
@@ -190,7 +193,7 @@ if (typeof document !== "undefined") {
   const preview = document.getElementById("preview");
   const form = document.getElementById("github-user-form");
   const input = document.getElementById("github-username") as HTMLInputElement | null;
-  const status = document.getElementById("status");
+  const status = document.getElementById("status-msg");
   const titleInput = document.getElementById("custom-title") as HTMLInputElement | null;
   const radiusInput = document.getElementById("border-radius") as HTMLInputElement | null;
   const radiusValue = document.getElementById("border-radius-value");
@@ -314,8 +317,25 @@ if (typeof document !== "undefined") {
       const output = document.querySelector(
         `[data-generated="${button.dataset.copy}"]`,
       );
-      if (!output?.textContent) return;
-      await navigator.clipboard.writeText(output.textContent);
+      const text = output?.textContent;
+      if (!text) return;
+
+      try {
+        // Preferred: async clipboard API (requires HTTPS or localhost)
+        await navigator.clipboard.writeText(text);
+      } catch {
+        // Fallback: execCommand for non-secure contexts
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+
       const original = button.textContent;
       button.textContent = "COPIED";
       window.setTimeout(() => {

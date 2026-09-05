@@ -1,17 +1,10 @@
 import http from "node:http";
 import { fetchGitHubStats } from "./src/data/github/client.ts";
-import { resolveTheme } from "./src/core/theme.ts";
+import { resolveTheme, COLOR_KEYS } from "./src/core/themes.js";
+import { STAT_KEYS } from "./src/widgets/github-stats/stat-definitions.js";
 import { renderStatsSvg, renderGridSvg } from "./api/render-stats.js";
 
 const PORT = Number(process.env.PORT || 3001);
-
-const STAT_KEYS = new Set([
-  "username", "name", "followers", "following", "repositories",
-  "commits", "issues", "pullRequests", "pullRequestReviews",
-  "repositoryContributions", "contributions",
-]);
-
-const COLOR_KEYS = ["background", "border", "title", "text", "value", "accent"];
 
 const sendJson = (res, statusCode, payload) => {
   res.writeHead(statusCode, {
@@ -96,9 +89,21 @@ const server = http.createServer(async (req, res) => {
 
     sendJson(res, 200, { ...stats, theme: themeName, themeColors: theme });
   } catch (error) {
-    sendJson(res, 500, {
-      error: error instanceof Error ? error.message : "Unexpected server error",
-    });
+    const message = error instanceof Error ? error.message : "Unexpected server error";
+    if (url.pathname === "/api/stats") {
+      const truncated = message.length > 80 ? message.slice(0, 77) + "…" : message;
+      const escaped = truncated.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      const errorSvg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="80" viewBox="0 0 500 80">` +
+        `<rect width="500" height="80" rx="6" fill="#0d1117" stroke="#f85149" stroke-width="1.5"/>` +
+        `<text x="20" y="28" font-size="13" font-weight="700" fill="#f85149">Error</text>` +
+        `<text x="20" y="52" font-size="12" fill="#e6edf3">${escaped}</text>` +
+        `</svg>`;
+      res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8", "Cache-Control": "no-store", "Access-Control-Allow-Origin": "*" });
+      res.end(errorSvg);
+      return;
+    }
+    sendJson(res, 500, { error: message });
   }
 });
 

@@ -78,8 +78,23 @@ export async function handleStatsRequest(req, res, svg = false) {
       themeColors: theme,
     });
   } catch (error) {
-    res.status(500).json({
-      error: error instanceof Error ? error.message : "Unexpected server error",
-    });
+    const message = error instanceof Error ? error.message : "Unexpected server error";
+    if (svg) {
+      // Return an error SVG so GitHub README embeds show something readable
+      // rather than a broken image icon.
+      const truncated = message.length > 80 ? message.slice(0, 77) + "…" : message;
+      const escaped = truncated.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      const errorSvg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="80" viewBox="0 0 500 80">` +
+        `<rect width="500" height="80" rx="6" fill="#0d1117" stroke="#f85149" stroke-width="1.5"/>` +
+        `<text x="20" y="28" font-size="13" font-weight="700" fill="#f85149">Error</text>` +
+        `<text x="20" y="52" font-size="12" fill="#e6edf3">${escaped}</text>` +
+        `</svg>`;
+      res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+      res.setHeader("Cache-Control", "no-store");
+      res.status(200).send(errorSvg);
+      return;
+    }
+    res.status(500).json({ error: message });
   }
 }

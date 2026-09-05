@@ -85,6 +85,9 @@ export async function fetchGitHubStatsRuntime(username, token) {
   if (!result.data) {
     throw new Error("GitHub API returned no data.");
   }
+  if (!result.data.user) {
+    throw new Error(`GitHub user not found: "${username}"`);
+  }
 
   return mapGitHubUserResponseToStats(result.data);
 }

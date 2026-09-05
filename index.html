@@ -3,239 +3,762 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Widget Creator | GitHub embeds</title>
+    <title>Readme Maker — GitHub Stats Card Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
-      :root { color-scheme: dark; --bg: #10100f; --surface: #1a1917; --line: #393631; --muted: #a19d92; --text: #f0ece3; --blue: #8ee0c0; --purple: #ff7c61; }
-      * { box-sizing: border-box; }
-      body { margin: 0; min-height: 100vh; color: var(--text); background: radial-gradient(circle at 85% 0%, #3a2420 0, transparent 28%), radial-gradient(circle at 0% 100%, #15342d 0, transparent 24%), var(--bg); font-family: "Segoe UI", sans-serif; }
-      .shell { width: min(1280px, calc(100% - 48px)); margin: 0 auto; padding: 34px 0 54px; }
-      .topbar, .hero { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-      .topbar { margin-bottom: 58px; border-bottom: 1px solid rgba(57, 54, 49, .55); padding-bottom: 20px; }
+      /* ── Reset & tokens ──────────────────────────────────────────────── */
+      :root {
+        --bg:        #0c0c0e;
+        --bg2:       #111114;
+        --surface:   #17171b;
+        --surface2:  #1e1e24;
+        --line:      #2a2a32;
+        --line2:     #35353f;
+        --muted:     #6b6b78;
+        --subtle:    #9393a0;
+        --text:      #e8e8f0;
+        --white:     #ffffff;
+        --accent:    #7c6af7;
+        --accent2:   #a78bfa;
+        --green:     #3dd68c;
+        --orange:    #f97316;
+        --red:       #f87171;
+        color-scheme: dark;
+      }
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { font-size: 14px; }
+      body {
+        font-family: "Inter", "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
 
-      /* ── Brand ── */
-      .brand { display: flex; align-items: center; gap: 0; color: #fff; }
+      /* ── Layout ──────────────────────────────────────────────────────── */
+      .shell {
+        width: min(1200px, calc(100% - 48px));
+        margin: 0 auto;
+        padding: 0 0 80px;
+      }
+
+      /* ── Topbar ──────────────────────────────────────────────────────── */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 0;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 0;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
       .brand-mark {
-        display: flex; align-items: flex-end; justify-content: center; gap: 3px;
-        width: 40px; height: 40px;
-        border: 1px solid rgba(217, 98, 78, .55);
-        border-radius: 12px; padding: 9px 9px 8px;
-        background: linear-gradient(145deg, #ff8c72, #e8593a);
-        box-shadow: 0 6px 20px rgba(255, 100, 70, .25), inset 0 1px 0 rgba(255,255,255,.15);
+        width: 34px; height: 34px;
+        border-radius: 9px;
+        background: linear-gradient(135deg, #f97316, #dc2626);
+        display: flex; align-items: flex-end; justify-content: center;
+        gap: 2.5px; padding: 7px 8px 6px;
+        box-shadow: 0 4px 14px rgba(249,115,22,.35);
         flex-shrink: 0;
       }
-      .brand-mark span { display: block; width: 4px; border-radius: 3px; background: rgba(30,18,14,.85); }
-      .brand-mark span:nth-child(1) { height: 8px; }
-      .brand-mark span:nth-child(2) { height: 14px; }
-      .brand-mark span:nth-child(3) { height: 20px; }
-      .brand-copy { display: flex; flex-direction: column; gap: 1px; margin-left: 12px; }
-      .brand-copy strong { font-size: 15px; font-weight: 700; color: #f0ece3; letter-spacing: -.01em; }
-      .brand-copy small { color: #6b6560; font-size: 11px; font-weight: 400; letter-spacing: .01em; }
+      .brand-mark span {
+        display: block; width: 3.5px; border-radius: 2px;
+        background: rgba(255,255,255,.9);
+      }
+      .brand-mark span:nth-child(1) { height: 7px; }
+      .brand-mark span:nth-child(2) { height: 12px; }
+      .brand-mark span:nth-child(3) { height: 17px; }
+      .brand-name { font-size: 14px; font-weight: 700; color: var(--white); letter-spacing: -.02em; }
+      .brand-sub  { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 1px; }
 
-      /* ── Lab badge ── */
-      .header-badge {
-        display: flex; align-items: center; gap: 7px;
-        margin-left: 20px; padding-left: 20px;
-        border-left: 1px solid rgba(57,54,49,.7);
+      .topbar-center { display: flex; align-items: center; gap: 6px; }
+      .lab-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        border: 1px solid var(--line2);
+        border-radius: 999px; padding: 3px 10px 3px 7px;
+        font-size: 10px; font-weight: 600; letter-spacing: .08em;
+        color: var(--subtle); text-transform: uppercase;
+        background: var(--surface);
       }
-      .header-badge-pill {
-        display: inline-flex; align-items: center; gap: 6px;
-        border: 1px solid rgba(57,54,49,.9);
-        border-radius: 999px; padding: 4px 11px 4px 8px;
-        background: rgba(26,25,23,.6);
-        color: #8ee0c0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
-      }
-      .header-badge-pill::before {
-        content: "";
-        display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-        background: #8ee0c0; box-shadow: 0 0 8px #8ee0c0;
+      .lab-pill::before {
+        content: ""; width: 5px; height: 5px; border-radius: 50%;
+        background: var(--green); box-shadow: 0 0 6px var(--green);
         flex-shrink: 0;
       }
 
-      /* ── Nav ── */
-      nav { display: flex; align-items: center; gap: 6px; }
+      nav { display: flex; align-items: center; gap: 4px; }
       nav a {
-        border: 1px solid transparent; border-radius: 8px;
-        padding: 7px 13px;
-        color: #8c8880; font-size: 13px; font-weight: 500;
-        text-decoration: none;
-        transition: border-color .15s, color .15s, background .15s;
+        font-size: 13px; font-weight: 500; color: var(--muted);
+        text-decoration: none; padding: 6px 12px; border-radius: 7px;
+        border: 1px solid transparent;
+        transition: color .15s, border-color .15s, background .15s;
       }
-      nav a:hover { border-color: var(--line); color: var(--text); background: rgba(255,255,255,.03); }
-      nav a.nav-github {
-        border-color: rgba(57,54,49,.9);
-        color: #f0ece3;
-        background: rgba(26,25,23,.5);
+      nav a:hover { color: var(--text); background: var(--surface2); }
+      nav a.btn-outline {
+        border-color: var(--line2); color: var(--text);
+        background: var(--surface);
       }
-      nav a.nav-github:hover { background: rgba(255,255,255,.06); }
-      .hero { align-items: end; margin-bottom: 48px; }
-      h1 { margin: 0 0 8px; color: #f2f6fb; font-size: clamp(30px, 4vw, 46px); letter-spacing: 0; }
-      .hero p { margin: 0; color: var(--muted); font-size: 16px; }
-      .live { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; color: var(--muted); font-size: 13px; white-space: nowrap; }
-      .live i { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 12px var(--blue); }
-      .workspace { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.05fr); gap: 72px; align-items: start; }
-      .section-label { margin: 0 0 14px; color: #7d8997; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-      .field { margin-bottom: 28px; }
-      .field label { display: block; margin-bottom: 10px; color: #8793a1; font-size: 13px; font-weight: 600; }
-      .field label span { color: #697585; font-weight: 400; }
-      input[type="text"] { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; color: var(--text); background: var(--surface); font: inherit; outline: none; }
-      input[type="text"]:focus { border-color: var(--blue); }
-      select { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; color: var(--text); background: var(--surface); font: inherit; outline: none; }
-      select:focus { border-color: var(--blue); }
-      .theme-control { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: end; }
+      nav a.btn-outline:hover { background: var(--surface2); border-color: var(--line2); }
+
+      /* ── Hero ────────────────────────────────────────────────────────── */
+      .hero {
+        padding: 56px 0 48px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 48px;
+      }
+      .hero-text {}
+      .hero-eyebrow {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 11px; font-weight: 600; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--accent2);
+        margin-bottom: 14px;
+      }
+      .hero-eyebrow::before {
+        content: ""; width: 14px; height: 1px;
+        background: var(--accent2); display: block;
+      }
+      .hero h1 {
+        font-size: clamp(28px, 4vw, 42px);
+        font-weight: 700;
+        color: var(--white);
+        letter-spacing: -.03em;
+        line-height: 1.15;
+        margin-bottom: 10px;
+      }
+      .hero p {
+        font-size: 15px;
+        color: var(--muted);
+        max-width: 420px;
+        line-height: 1.6;
+      }
+      .live-indicator {
+        display: inline-flex; align-items: center; gap: 7px;
+        border: 1px solid var(--line2); border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 12px; color: var(--subtle);
+        white-space: nowrap;
+        background: var(--surface);
+        flex-shrink: 0;
+      }
+      .live-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: var(--green); box-shadow: 0 0 8px var(--green);
+        flex-shrink: 0;
+      }
+
+      /* ── Workspace grid ──────────────────────────────────────────────── */
+      .workspace {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 40px;
+        align-items: start;
+      }
+
+      /* ── Form panel ──────────────────────────────────────────────────── */
+      .form-panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .form-section {
+        padding: 20px 22px;
+        border-bottom: 1px solid var(--line);
+      }
+      .form-section:last-child { border-bottom: none; }
+
+      .section-title {
+        font-size: 10px; font-weight: 700; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--muted);
+        margin-bottom: 14px;
+      }
+
+      /* embed type tabs */
+      .embed-tabs { display: flex; gap: 3px; }
+      .embed-tabs button {
+        flex: 1; border: 0; border-radius: 7px; padding: 8px 6px;
+        font-size: 12px; font-weight: 600; color: var(--muted);
+        background: transparent; cursor: pointer; font-family: inherit;
+        transition: color .12s, background .12s;
+      }
+      .embed-tabs button.active {
+        color: var(--white);
+        background: var(--surface2);
+        box-shadow: 0 0 0 1px var(--line2);
+      }
+      .embed-tabs button:hover:not(.active) { color: var(--subtle); background: var(--surface2); }
+
+      /* field */
+      .field { margin-bottom: 16px; }
+      .field:last-child { margin-bottom: 0; }
+      .field-label {
+        display: block; font-size: 11px; font-weight: 600;
+        letter-spacing: .06em; text-transform: uppercase;
+        color: var(--muted); margin-bottom: 7px;
+      }
+      .field-label span { color: var(--line2); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+      input[type="text"] {
+        width: 100%; padding: 10px 13px;
+        background: var(--bg2); border: 1px solid var(--line2);
+        border-radius: 8px; color: var(--text); font: inherit;
+        font-size: 13px; outline: none;
+        transition: border-color .15s;
+      }
+      input[type="text"]:focus { border-color: var(--accent); }
+      input[type="text"]::placeholder { color: var(--muted); }
+
+      .input-row { display: flex; gap: 8px; }
+      .input-row input { flex: 1; }
+      .btn-load {
+        border: 0; border-radius: 8px; padding: 0 16px;
+        background: var(--orange); color: #fff; font: inherit;
+        font-size: 13px; font-weight: 700; cursor: pointer;
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(249,115,22,.3);
+        transition: opacity .12s;
+      }
+      .btn-load:hover { opacity: .9; }
+
+      .status { font-size: 11px; color: var(--muted); margin-top: 7px; min-height: 16px; }
+
+      /* theme picker */
+      .theme-control { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
       .theme-picker { position: relative; }
-      .theme-picker-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; color: var(--text); background: var(--surface); font: inherit; text-align: left; cursor: pointer; }
-      .theme-picker-trigger::after { content: "▾"; color: var(--muted); }
+      .theme-picker-trigger {
+        display: flex; align-items: center; justify-content: space-between;
+        width: 100%; padding: 10px 13px;
+        background: var(--bg2); border: 1px solid var(--line2);
+        border-radius: 8px; color: var(--text); font: inherit;
+        font-size: 13px; text-align: left; cursor: pointer;
+        transition: border-color .15s;
+      }
+      .theme-picker-trigger::after { content: "▾"; color: var(--muted); font-size: 11px; }
+      .theme-picker[open] .theme-picker-trigger { border-color: var(--accent); }
       .theme-picker[open] .theme-picker-trigger::after { content: "▴"; }
-      .theme-menu { position: absolute; z-index: 5; top: calc(100% + 8px); left: 0; width: min(430px, 100vw - 56px); max-height: 360px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: var(--surface); box-shadow: 0 18px 42px rgba(0,0,0,.4); }
-      .theme-option { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; width: 100%; border: 0; border-radius: 7px; padding: 10px; color: var(--text); background: transparent; text-align: left; cursor: pointer; }
-      .theme-option:hover, .theme-option.selected { background: #1e2028; }
-      .theme-option-name { font-size: 13px; font-weight: 600; }
-      .theme-swatches { display: flex; gap: 4px; }
-      .theme-swatches span { width: 16px; height: 16px; border: 1px solid rgba(255,255,255,.3); border-radius: 50%; }
-      .theme-swatches span:first-child { border-radius: 4px; }
-      .custom-theme { margin-bottom: 8px; border-bottom: 1px solid var(--line); padding: 4px 8px 12px; }
-      .custom-theme summary { color: var(--blue); cursor: pointer; font-size: 13px; font-weight: 700; }
-      .custom-colors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; padding: 12px 0 0; }
-      .custom-color { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--muted); font-size: 13px; text-transform: capitalize; }
-      .custom-color input[type="color"] { flex-shrink: 0; width: 22px; height: 22px; border: 1px solid rgba(255,255,255,.2); padding: 0; border-radius: 50%; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; }
+      .theme-menu {
+        position: absolute; z-index: 20;
+        top: calc(100% + 6px); left: 0;
+        width: min(380px, 100vw - 48px);
+        max-height: 340px; overflow-y: auto;
+        background: var(--surface); border: 1px solid var(--line2);
+        border-radius: 10px; padding: 6px;
+        box-shadow: 0 20px 48px rgba(0,0,0,.5);
+      }
+      .theme-menu::-webkit-scrollbar { width: 4px; }
+      .theme-menu::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 99px; }
+      .custom-theme { border-bottom: 1px solid var(--line); padding: 6px 4px 12px; margin-bottom: 4px; }
+      .custom-theme summary {
+        font-size: 12px; font-weight: 600; color: var(--accent2);
+        cursor: pointer; padding: 4px 6px; border-radius: 6px;
+        list-style: none;
+      }
+      .custom-theme summary::-webkit-details-marker { display: none; }
+      .custom-theme summary::before { content: "▶ "; font-size: 10px; }
+      .custom-theme[open] summary::before { content: "▼ "; }
+      .custom-colors {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 8px 16px; padding: 10px 6px 4px;
+      }
+      .custom-color {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 12px; color: var(--subtle); text-transform: capitalize;
+      }
+      .custom-color input[type="color"] {
+        flex-shrink: 0; width: 22px; height: 22px;
+        border: 1px solid var(--line2); border-radius: 50%;
+        padding: 0; background: transparent; cursor: pointer;
+        appearance: none; -webkit-appearance: none;
+      }
       .custom-color input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
       .custom-color input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
-      .custom-theme-apply { margin-top: 14px; border: 0; border-radius: 7px; padding: 9px 12px; color: #171614; background: var(--blue); font-size: 12px; font-weight: 700; cursor: pointer; }
-      .palette-preview { display: flex; align-items: center; gap: 5px; height: 47px; padding: 0 2px; }
-      .palette-swatch { width: 20px; height: 20px; border: 1px solid rgba(255,255,255,.28); border-radius: 50%; box-shadow: 0 0 0 2px rgba(0,0,0,.25); }
-      .palette-swatch[data-palette-color="background"] { border-radius: 5px; }
-      .palette-preview::after { content: ""; }
-      .input-row { display: flex; gap: 10px; }
-      .input-row button { border: 0; border-radius: 8px; padding: 0 20px; color: #1d1613; background: var(--purple); font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(255, 124, 97, .18); }
-      .tabs, .segmented { display: flex; gap: 4px; border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
-      .tabs button, .segmented button { flex: 1; border: 0; border-radius: 9px; padding: 11px 12px; color: var(--muted); background: transparent; font-weight: 600; cursor: pointer; }
-      .tabs button.active { color: #171614; background: var(--blue); }
-      .segmented button.active { color: var(--text); background: #2a2e3a; border: 1px solid var(--line); }
-      .range-line { display: flex; justify-content: space-between; color: #8c98a6; font-size: 13px; }
-      .range-line label { margin: 0; }
-      .range-line strong { color: var(--blue); }
-      input[type="range"] { width: 100%; accent-color: var(--blue); }
-      .checks { display: flex; flex-wrap: wrap; gap: 18px; color: #aeb8c4; font-size: 14px; }
-      .checks label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-      input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--blue); }
-      .stat-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: rgba(26, 25, 23, .45); }
-      .stat-picker label { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--text); font-size: 13px; font-weight: 400; cursor: pointer; }
-      .stat-options { margin: 24px 0 28px; border-top: 1px solid var(--line); padding-top: 20px; }
-      .stat-options summary { display: flex; align-items: center; min-height: 24px; color: var(--text); cursor: pointer; font-size: 16px; font-weight: 600; list-style: none; }
+      .custom-theme-apply {
+        margin-top: 10px; margin-left: 6px;
+        border: 0; border-radius: 6px; padding: 7px 12px;
+        background: var(--accent); color: #fff;
+        font: inherit; font-size: 11px; font-weight: 700;
+        cursor: pointer; letter-spacing: .04em;
+      }
+      .theme-option {
+        display: grid; grid-template-columns: 1fr auto; gap: 12px;
+        align-items: center; width: 100%;
+        border: 0; border-radius: 7px; padding: 9px 10px;
+        color: var(--text); background: transparent;
+        font: inherit; font-size: 13px; text-align: left; cursor: pointer;
+        transition: background .1s;
+      }
+      .theme-option:hover, .theme-option.selected { background: var(--surface2); }
+      .theme-option-name { font-size: 12px; font-weight: 500; }
+      .theme-swatches { display: flex; gap: 3px; }
+      .theme-swatches span {
+        width: 14px; height: 14px; border-radius: 50%;
+        border: 1px solid rgba(255,255,255,.18);
+      }
+      .theme-swatches span:first-child { border-radius: 3px; }
+      .palette-preview { display: flex; align-items: center; gap: 4px; }
+      .palette-swatch {
+        width: 18px; height: 18px; border-radius: 50%;
+        border: 1px solid rgba(255,255,255,.2);
+        box-shadow: 0 0 0 1px rgba(0,0,0,.3);
+      }
+      .palette-swatch[data-palette-color="background"] { border-radius: 4px; }
+      select { display: none; }
+
+      /* stat picker */
+      .stat-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 6px 12px;
+      }
+      .stat-grid label {
+        display: flex; align-items: center; gap: 7px;
+        font-size: 12px; color: var(--subtle); cursor: pointer;
+        padding: 5px 0;
+      }
+      .stat-grid label:hover { color: var(--text); }
+      input[type="checkbox"] {
+        width: 15px; height: 15px; accent-color: var(--accent);
+        flex-shrink: 0; cursor: pointer; border-radius: 3px;
+      }
+
+      .stat-options { padding-top: 0; margin-top: 0; }
+      .stat-options summary {
+        font-size: 12px; font-weight: 600; color: var(--subtle);
+        cursor: pointer; list-style: none;
+        display: flex; align-items: center; gap: 6px;
+      }
       .stat-options summary::-webkit-details-marker { display: none; }
-      .stat-options summary::before { content: "▶"; display: inline-block; margin-right: 9px; color: var(--blue); font-size: 13px; transform-origin: center; transition: transform .15s ease; }
+      .stat-options summary::before {
+        content: "▶"; font-size: 9px; color: var(--accent);
+        transition: transform .15s;
+      }
       .stat-options[open] summary::before { transform: rotate(90deg); }
-      .advanced { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 20px; }
-      .advanced summary { color: #8d99a7; cursor: pointer; font-size: 13px; }
-      .status { min-height: 18px; margin-top: 10px; color: var(--muted); font-size: 12px; }
-      .preview-frame { border: 1px solid var(--line); border-radius: 14px; padding: 28px; background: rgba(26, 25, 23, .78); box-shadow: 0 24px 80px rgba(0, 0, 0, .28); }
-      .preview-stage { display: grid; min-height: 420px; place-items: center; overflow: auto; border: 1px solid #49443b; border-radius: 6px; padding: 28px; background: #141412; }
+      .stat-options .advanced-content { padding-top: 12px; }
+
+      /* range */
+      .range-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+      .range-row label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+      .range-row strong { font-size: 12px; font-weight: 700; color: var(--accent2); }
+      input[type="range"] { width: 100%; accent-color: var(--accent); height: 4px; cursor: pointer; }
+
+      /* layout toggle */
+      .segmented {
+        display: flex; gap: 3px;
+        background: var(--bg2); border: 1px solid var(--line2);
+        border-radius: 8px; padding: 3px;
+      }
+      .segmented button {
+        flex: 1; border: 0; border-radius: 6px; padding: 7px 10px;
+        font: inherit; font-size: 12px; font-weight: 600;
+        color: var(--muted); background: transparent;
+        cursor: pointer; transition: color .12s, background .12s;
+      }
+      .segmented button.active { color: var(--white); background: var(--surface2); box-shadow: 0 0 0 1px var(--line2); }
+
+      /* checks */
+      .checks { display: flex; flex-wrap: wrap; gap: 12px 18px; }
+      .checks label {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 12px; color: var(--subtle); cursor: pointer;
+      }
+      .checks label:hover { color: var(--text); }
+
+      /* ── Preview panel ────────────────────────────────────────────────── */
+      .preview-panel {
+        position: sticky; top: 24px;
+      }
+      .preview-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .preview-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+      .preview-frame {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .preview-toolbar {
+        display: flex; align-items: center; gap: 6px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        background: var(--bg2);
+      }
+      .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+      .preview-dot:nth-child(1) { background: #f87171; }
+      .preview-dot:nth-child(2) { background: #fbbf24; }
+      .preview-dot:nth-child(3) { background: #34d399; }
+      .preview-stage {
+        min-height: 380px;
+        display: grid; place-items: center;
+        padding: 32px 24px;
+        background: #0a0a0d;
+      }
       #preview { max-width: 100%; }
       #preview svg { display: block; max-width: 100%; height: auto; }
-      .coming-soon { display: grid; min-width: min(420px, 100%); min-height: 320px; place-items: center; align-content: center; gap: 18px; color: var(--purple); text-align: center; }
-      .coming-soon-emoji { font-size: 64px; line-height: 1; }
-      .coming-soon strong { font-size: clamp(28px, 5vw, 48px); letter-spacing: .08em; }
-      .generation { margin-top: 76px; border-top: 1px solid var(--line); padding-top: 34px; }
-      .generation-head { margin-bottom: 22px; }
-      .generation-head h2 { margin: 0 0 6px; color: #f2f6fb; font-size: 24px; }
-      .generation-head p { margin: 0; color: var(--muted); font-size: 14px; }
-      .code-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-      .code-card { min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 20px; background: rgba(26, 25, 23, .72); }
-      .code-card header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; color: #8d99a7; font-size: 12px; font-weight: 700; letter-spacing: .08em; }
-      .code-card button { border: 0; color: var(--blue); background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
-      .code-output { display: block; min-height: 64px; overflow-wrap: anywhere; color: var(--text); font-family: Consolas, monospace; font-size: 13px; line-height: 1.7; }
-      .community-note { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin-top: 24px; border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; background: linear-gradient(110deg, rgba(26, 25, 23, .88), rgba(21, 52, 45, .38)); }
-      .community-note h3 { margin: 0 0 7px; color: var(--blue); font-size: 17px; }
-      .community-note p { max-width: 720px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
-      .community-note a { flex: 0 0 auto; border: 1px solid var(--blue); border-radius: 8px; padding: 10px 15px; color: var(--blue); text-decoration: none; font-size: 13px; font-weight: 700; }
-      .site-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 34px; border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: 13px; }
-      .site-footer p { margin: 0; }
-      .site-footer a { color: var(--blue); text-decoration: none; }
-      .home-page { display: none; min-height: 70vh; align-content: center; justify-items: center; padding: 80px 0; text-align: center; }
+      .coming-soon {
+        display: grid; place-items: center; align-content: center;
+        gap: 12px; text-align: center;
+        color: var(--muted); min-width: min(380px, 100%); min-height: 280px;
+      }
+      .coming-soon strong { font-size: 18px; font-weight: 700; color: var(--subtle); }
+      .coming-soon-emoji { font-size: 48px; line-height: 1; }
+
+      /* ── Output section ──────────────────────────────────────────────── */
+      .output-section {
+        margin-top: 56px;
+        padding-top: 40px;
+        border-top: 1px solid var(--line);
+      }
+      .output-header { margin-bottom: 20px; }
+      .output-header h2 { font-size: 18px; font-weight: 700; color: var(--white); letter-spacing: -.02em; margin-bottom: 4px; }
+      .output-header p { font-size: 13px; color: var(--muted); }
+      .code-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .code-card {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 12px; overflow: hidden;
+      }
+      .code-card-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 14px;
+        background: var(--bg2); border-bottom: 1px solid var(--line);
+      }
+      .code-card-label {
+        font-size: 10px; font-weight: 700; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--muted);
+      }
+      .btn-copy {
+        border: 1px solid var(--line2); border-radius: 5px;
+        padding: 3px 10px; background: transparent;
+        color: var(--subtle); font: inherit; font-size: 10px;
+        font-weight: 700; letter-spacing: .06em;
+        text-transform: uppercase; cursor: pointer;
+        transition: color .12s, border-color .12s, background .12s;
+      }
+      .btn-copy:hover { color: var(--white); border-color: var(--accent); background: rgba(124,106,247,.1); }
+      .code-output {
+        display: block; padding: 14px;
+        font-family: "SF Mono", Consolas, "Fira Code", monospace;
+        font-size: 11.5px; line-height: 1.7; color: var(--subtle);
+        overflow-wrap: anywhere; min-height: 72px;
+      }
+
+      /* ── Community note ──────────────────────────────────────────────── */
+      .community-note {
+        margin-top: 20px;
+        display: flex; align-items: center; justify-content: space-between; gap: 24px;
+        background: linear-gradient(110deg, var(--surface), rgba(124,106,247,.08));
+        border: 1px solid var(--line);
+        border-radius: 12px; padding: 20px 24px;
+      }
+      .community-note h3 { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+      .community-note p { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 600px; }
+      .btn-github {
+        flex-shrink: 0;
+        display: inline-flex; align-items: center; gap: 6px;
+        border: 1px solid var(--line2); border-radius: 8px;
+        padding: 9px 16px; text-decoration: none;
+        color: var(--text); font-size: 13px; font-weight: 600;
+        background: var(--surface2);
+        transition: border-color .12s, background .12s;
+        white-space: nowrap;
+      }
+      .btn-github:hover { border-color: var(--accent); background: rgba(124,106,247,.1); }
+
+      /* ── Footer ──────────────────────────────────────────────────────── */
+      .site-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 32px; padding-top: 20px;
+        border-top: 1px solid var(--line);
+        font-size: 12px; color: var(--muted);
+      }
+      .site-footer a { color: var(--subtle); text-decoration: none; }
+      .site-footer a:hover { color: var(--text); }
+
+      /* ── Home page ───────────────────────────────────────────────────── */
+      .home-page { display: none; min-height: 80vh; align-content: center; justify-items: center; padding: 80px 0; text-align: center; }
       .home-page.is-active { display: grid; }
-      .home-kicker { margin: 0 0 18px; color: var(--blue); font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-      .home-page h1 { max-width: 720px; margin: 0 0 18px; font-size: clamp(42px, 8vw, 78px); line-height: 1.02; }
-      .home-page p { max-width: 560px; margin: 0 0 30px; color: var(--muted); font-size: 17px; line-height: 1.7; }
-      .home-coming { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 32px; border: 1px solid var(--line); border-radius: 999px; padding: 10px 16px; color: var(--text); font-size: 14px; }
-      .home-coming span { color: var(--purple); font-size: 20px; }
-      .home-actions { display: flex; gap: 12px; }
-      .home-actions a { border-radius: 8px; padding: 13px 18px; color: #171614; background: var(--blue); font-size: 14px; font-weight: 700; text-decoration: none; }
-      .home-actions a.secondary { border: 1px solid var(--line); color: var(--text); background: transparent; }
-      .builder-page.is-active { display: block; }
+      .home-kicker { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent2); margin-bottom: 18px; }
+      .home-coming { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 28px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; color: var(--subtle); font-size: 13px; }
+      .home-coming span { color: var(--orange); }
+      .home-page h1 { max-width: 680px; font-size: clamp(36px, 7vw, 68px); font-weight: 700; letter-spacing: -.04em; line-height: 1.05; color: var(--white); margin-bottom: 18px; }
+      .home-page > p { max-width: 500px; color: var(--muted); font-size: 16px; line-height: 1.7; margin-bottom: 32px; }
+      .home-actions { display: flex; gap: 10px; }
+      .home-actions a { border-radius: 9px; padding: 12px 20px; font-size: 14px; font-weight: 700; text-decoration: none; color: #fff; background: var(--accent); transition: opacity .12s; }
+      .home-actions a:hover { opacity: .88; }
+      .home-actions a.secondary { background: var(--surface2); border: 1px solid var(--line2); color: var(--text); }
       .builder-page { display: none; }
-      @media (max-width: 560px) { .custom-colors { grid-template-columns: 1fr; } }
-      @media (max-width: 860px) { .code-grid { grid-template-columns: 1fr; } .community-note { align-items: flex-start; flex-direction: column; gap: 16px; } }
-      @media (max-width: 860px) { .shell { width: min(100% - 28px, 650px); padding-top: 22px; } .topbar { margin-bottom: 38px; } nav { display: none; } .header-badge { display: none; } .hero { align-items: start; flex-direction: column; margin-bottom: 34px; } .workspace { grid-template-columns: 1fr; gap: 36px; } .preview-frame { padding: 14px; } .preview-stage { min-height: 300px; padding: 12px; } .site-footer { align-items: flex-start; flex-direction: column; gap: 8px; } }
+      .builder-page.is-active { display: block; }
+
+      /* ── Responsive ──────────────────────────────────────────────────── */
+      @media (max-width: 900px) {
+        .workspace { grid-template-columns: 1fr; }
+        .preview-panel { position: static; }
+        .code-grid { grid-template-columns: 1fr; }
+        .community-note { flex-direction: column; align-items: flex-start; gap: 14px; }
+      }
+      @media (max-width: 640px) {
+        .shell { width: calc(100% - 28px); }
+        .topbar-center, nav { display: none; }
+        .hero { flex-direction: column; align-items: flex-start; }
+        .site-footer { flex-direction: column; gap: 6px; }
+      }
+      @media (max-width: 420px) {
+        .custom-colors { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body>
     <main class="shell">
+
+      <!-- ── Home page ── -->
       <section class="home-page" id="home-page" aria-labelledby="home-title">
         <p class="home-kicker">Readme Maker</p>
-        <div class="home-coming"><span>✦</span> More README tools are on the way</div>
-        <h1 id="home-title">Your README,<br />made more useful.</h1>
-        <p>Readme Maker is an open-source home for practical GitHub profile widgets and README tools. The full toolkit is currently in alpha.</p>
-        <div class="home-actions"><a href="/builder">Open widget creator</a><a class="secondary" href="https://github.com/Namit-Rana6/Readme-Maker">View on GitHub</a></div>
+        <div class="home-coming"><span>✦</span> More tools coming soon</div>
+        <h1 id="home-title">Your README,<br/>made sharper.</h1>
+        <p>Generate beautiful GitHub stats widgets and embed them in your README with a single line.</p>
+        <div class="home-actions">
+          <a href="/builder">Open builder</a>
+          <a class="secondary" href="https://github.com/Namit-Rana6/Readme-Maker">View on GitHub</a>
+        </div>
       </section>
+
+      <!-- ── Builder page ── -->
       <div class="builder-page" id="builder-page">
-      <header class="topbar" aria-label="Site header">
-        <div class="brand">
-          <a href="/" aria-label="Readme Maker home">
+
+        <!-- Topbar -->
+        <header class="topbar" aria-label="Site header">
+          <a href="/" class="brand" aria-label="Readme Maker home">
             <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+            <div>
+              <div class="brand-name">Readme Maker</div>
+              <div class="brand-sub">GitHub widget generator</div>
+            </div>
           </a>
-          <span class="brand-copy">
-            <strong>Readme Maker</strong>
-            <small>GitHub widget generator</small>
-          </span>
-          <div class="header-badge">
-            <span class="header-badge-pill">SVG Widget Lab</span>
+          <div class="topbar-center">
+            <span class="lab-pill">SVG Widget Lab</span>
+          </div>
+          <nav>
+            <a href="/">Home</a>
+            <a href="https://github.com/Namit-Rana6/Readme-Maker" class="btn-outline">GitHub</a>
+          </nav>
+        </header>
+
+        <!-- Hero -->
+        <div class="hero" id="try">
+          <div class="hero-text">
+            <div class="hero-eyebrow">Stats Card Builder</div>
+            <h1>Build your embed</h1>
+            <p>Configure, preview, and copy a production-ready GitHub stats card in seconds.</p>
+          </div>
+          <div class="live-indicator" id="status">
+            <span class="live-dot"></span>
+            Live preview refreshes automatically
           </div>
         </div>
-        <nav>
-          <a href="/">Home</a>
-          <a href="https://github.com/Namit-Rana6/Readme-Maker" class="nav-github">GitHub</a>
-        </nav>
-      </header>
-      <section class="hero" id="try"><div><h1>Try it out</h1><p>Generate your embed, preview it, then copy a single line.</p></div><div class="live"><i></i> Live preview refreshes automatically</div></section>
-      <section class="workspace">
-        <form id="github-user-form">
-          <p class="section-label">Embed type</p>
-          <div class="tabs" role="tablist"><button class="active" type="button" data-mode="stats">Stats Card</button><button type="button" data-mode="languages">Languages</button><button type="button" data-mode="badge">Mini Badge</button><button type="button" data-mode="sparkline">Sparkline</button></div>
-          <div class="field" style="margin-top:28px"><label for="github-username">GITHUB USERNAME</label><div class="input-row"><input id="github-username" type="text" value="Namit-Rana6" placeholder="Enter username"/><button type="submit">Load</button></div><div id="status" class="status">Live preview ready</div></div>
-          <div class="field"><label for="custom-title">CUSTOM TITLE <span>(OPTIONAL)</span></label><input id="custom-title" type="text" placeholder="e.g. Dev Stats"/></div>
-          <div class="field"><label for="theme">THEME</label><div class="theme-control"><details class="theme-picker" id="theme-picker"><summary class="theme-picker-trigger" id="theme-picker-trigger">Default</summary><div class="theme-menu" id="theme-menu"><details class="custom-theme"><summary>Create your own theme</summary><div class="custom-colors"><label class="custom-color">Background<input type="color" data-custom-color="background" value="#0d1117"/></label><label class="custom-color">Border<input type="color" data-custom-color="border" value="#30363d"/></label><label class="custom-color">Title<input type="color" data-custom-color="title" value="#a371f7"/></label><label class="custom-color">Text<input type="color" data-custom-color="text" value="#e6edf3"/></label><label class="custom-color">Value<input type="color" data-custom-color="value" value="#ffffff"/></label><label class="custom-color">Accent<input type="color" data-custom-color="accent" value="#58a6ff"/></label></div><button type="button" class="custom-theme-apply" id="apply-custom-theme">Use custom theme</button></details><div id="theme-options"></div></div></details><select id="theme" hidden><option value="default">Default</option><option value="dark">Dark</option><option value="ocean">Ocean</option><option value="sunset">Sunset</option><option value="cyberpunk">Cyberpunk</option><option value="midnight">Midnight</option><option value="tokyoNight">Tokyo Night</option><option value="emerald">Emerald</option><option value="sunsetGlow">Sunset Glow</option></select><div class="palette-preview" aria-label="Current theme palette"><span class="palette-swatch" data-palette-color="background"></span><span class="palette-swatch" data-palette-color="border"></span><span class="palette-swatch" data-palette-color="title"></span><span class="palette-swatch" data-palette-color="text"></span><span class="palette-swatch" data-palette-color="value"></span><span class="palette-swatch" data-palette-color="accent"></span></div></div></div>
-          <details class="stat-options"><summary>Choose stats</summary><div class="advanced-content"><div class="stat-picker">
-            <label><input type="checkbox" data-stat-key="username" checked/> Username</label>
-            <label><input type="checkbox" data-stat-key="name" checked/> Name</label>
-            <label><input type="checkbox" data-stat-key="followers" checked/> Followers</label>
-            <label><input type="checkbox" data-stat-key="following" checked/> Following</label>
-            <label><input type="checkbox" data-stat-key="repositories" checked/> Public repositories</label>
-            <label><input type="checkbox" data-stat-key="commits" checked/> Commits</label>
-            <label><input type="checkbox" data-stat-key="issues" checked/> Issues</label>
-            <label><input type="checkbox" data-stat-key="pullRequests" checked/> Pull requests</label>
-            <label><input type="checkbox" data-stat-key="pullRequestReviews" checked/> PR reviews</label>
-            <label><input type="checkbox" data-stat-key="repositoryContributions" checked/> Repository contributions</label>
-            <label><input type="checkbox" data-stat-key="contributions" checked/> Total contributions</label>
-          </div><p class="status">Choose which available GitHub stats appear in the card.</p></div></details>
-          <div class="field"><div class="range-line"><label for="border-radius">BORDER RADIUS <strong id="border-radius-value">6</strong></label></div><input id="border-radius" type="range" min="0" max="18" step="1" value="6"/></div>
-          <div class="field"><p class="section-label">Layout</p><div class="segmented"><button type="button" class="active" data-layout="standard">Standard</button><button type="button" data-layout="hidden">Hidden</button></div></div>
-          <div class="checks"><label><input id="show-icons" type="checkbox" checked/> Show Icons</label><label><input id="hide-border" type="checkbox"/> Hide Border</label><label><input id="hide-title" type="checkbox"/> Hide Title</label><label><input id="centre-title" type="checkbox"/> Centre Title</label></div>
-          
-        </form>
-        <section><p class="section-label">Live preview</p><div class="preview-frame"><div class="preview-stage"><div id="preview"></div></div></div></section>
-      </section>
-      <section class="generation" aria-labelledby="generation-title">
-        <div class="generation-head"><h2 id="generation-title">Use your embed</h2><p>Copy one line into your README, website, or profile.</p></div>
-        <div class="code-grid">
-          <article class="code-card"><header><span>LINK</span><button type="button" data-copy="link">COPY</button></header><code class="code-output" data-generated="link"></code></article>
-          <article class="code-card"><header><span>MARKDOWN</span><button type="button" data-copy="markdown">COPY</button></header><code class="code-output" data-generated="markdown"></code></article>
-          <article class="code-card"><header><span>HTML</span><button type="button" data-copy="html">COPY</button></header><code class="code-output" data-generated="html"></code></article>
-        </div>
-      </section>
-      <aside class="community-note" aria-label="Open source project notice"><div><h3>🚀 Built in the open</h3><p>Readme Maker is free, open-source, and getting better every day. Got an idea, found a bug, or want to add a theme? We'd love your input. ⭐ Star the repo or open a PR — every contribution counts.</p></div><a href="https://github.com/Namit-Rana6/Readme-Maker">Contribute on GitHub</a></aside>
-      <footer class="site-footer"><p>Built by <a href="https://github.com/Namit-Rana6">Namit Rana</a> — open source, free forever.</p><a href="https://github.com/Namit-Rana6/Readme-Maker">View source on GitHub</a></footer>
-      </div>
+
+        <!-- Workspace -->
+        <div class="workspace">
+
+          <!-- Left: Form -->
+          <form id="github-user-form">
+            <div class="form-panel">
+
+              <!-- Embed type -->
+              <div class="form-section">
+                <div class="section-title">Embed type</div>
+                <div class="embed-tabs" role="tablist">
+                  <button class="active" type="button" data-mode="stats">Stats Card</button>
+                  <button type="button" data-mode="languages">Languages</button>
+                  <button type="button" data-mode="badge">Badge</button>
+                  <button type="button" data-mode="sparkline">Sparkline</button>
+                </div>
+              </div>
+
+              <!-- Username -->
+              <div class="form-section">
+                <div class="section-title">GitHub username</div>
+                <div class="field">
+                  <div class="input-row">
+                    <input id="github-username" type="text" value="Namit-Rana6" placeholder="e.g. torvalds" autocomplete="off" spellcheck="false"/>
+                    <button type="submit" class="btn-load">Load</button>
+                  </div>
+                  <div id="status-msg" class="status">Ready — enter a username and hit Load</div>
+                </div>
+              </div>
+
+              <!-- Title + Theme -->
+              <div class="form-section">
+                <div class="field">
+                  <label class="field-label" for="custom-title">Custom title <span>(optional)</span></label>
+                  <input id="custom-title" type="text" placeholder="e.g. Dev Stats"/>
+                </div>
+                <div class="field">
+                  <label class="field-label">Theme</label>
+                  <div class="theme-control">
+                    <details class="theme-picker" id="theme-picker">
+                      <summary class="theme-picker-trigger" id="theme-picker-trigger">Default</summary>
+                      <div class="theme-menu" id="theme-menu">
+                        <details class="custom-theme">
+                          <summary>Create custom theme</summary>
+                          <div class="custom-colors">
+                            <label class="custom-color">Background<input type="color" data-custom-color="background" value="#0d1117"/></label>
+                            <label class="custom-color">Border<input type="color" data-custom-color="border" value="#30363d"/></label>
+                            <label class="custom-color">Title<input type="color" data-custom-color="title" value="#a371f7"/></label>
+                            <label class="custom-color">Text<input type="color" data-custom-color="text" value="#e6edf3"/></label>
+                            <label class="custom-color">Value<input type="color" data-custom-color="value" value="#ffffff"/></label>
+                            <label class="custom-color">Accent<input type="color" data-custom-color="accent" value="#58a6ff"/></label>
+                          </div>
+                          <button type="button" class="custom-theme-apply" id="apply-custom-theme">Apply theme</button>
+                        </details>
+                        <div id="theme-options"></div>
+                      </div>
+                    </details>
+                    <select id="theme" hidden>
+                      <option value="default">Default</option>
+                      <option value="dark">Dark</option>
+                      <option value="ocean">Ocean</option>
+                      <option value="sunset">Sunset</option>
+                      <option value="cyberpunk">Cyberpunk</option>
+                      <option value="midnight">Midnight</option>
+                      <option value="tokyoNight">Tokyo Night</option>
+                      <option value="emerald">Emerald</option>
+                      <option value="sunsetGlow">Sunset Glow</option>
+                    </select>
+                    <div class="palette-preview" aria-label="Current theme palette">
+                      <span class="palette-swatch" data-palette-color="background"></span>
+                      <span class="palette-swatch" data-palette-color="border"></span>
+                      <span class="palette-swatch" data-palette-color="title"></span>
+                      <span class="palette-swatch" data-palette-color="text"></span>
+                      <span class="palette-swatch" data-palette-color="value"></span>
+                      <span class="palette-swatch" data-palette-color="accent"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stats -->
+              <div class="form-section">
+                <details class="stat-options">
+                  <summary>Choose stats</summary>
+                  <div class="advanced-content">
+                    <div class="stat-grid">
+                      <label><input type="checkbox" data-stat-key="username" checked/> Username</label>
+                      <label><input type="checkbox" data-stat-key="name" checked/> Name</label>
+                      <label><input type="checkbox" data-stat-key="followers" checked/> Followers</label>
+                      <label><input type="checkbox" data-stat-key="following" checked/> Following</label>
+                      <label><input type="checkbox" data-stat-key="repositories" checked/> Repositories</label>
+                      <label><input type="checkbox" data-stat-key="commits" checked/> Commits</label>
+                      <label><input type="checkbox" data-stat-key="issues" checked/> Issues</label>
+                      <label><input type="checkbox" data-stat-key="pullRequests" checked/> Pull requests</label>
+                      <label><input type="checkbox" data-stat-key="pullRequestReviews" checked/> PR reviews</label>
+                      <label><input type="checkbox" data-stat-key="repositoryContributions" checked/> Repo contributions</label>
+                      <label><input type="checkbox" data-stat-key="contributions" checked/> Contributions</label>
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              <!-- Appearance -->
+              <div class="form-section">
+                <div class="field">
+                  <div class="range-row">
+                    <label for="border-radius" class="field-label">Border radius</label>
+                    <strong id="border-radius-value">6</strong>
+                  </div>
+                  <input id="border-radius" type="range" min="0" max="20" step="1" value="6"/>
+                </div>
+                <div class="field">
+                  <label class="field-label">Layout</label>
+                  <div class="segmented">
+                    <button type="button" class="active" data-layout="standard">Standard</button>
+                    <button type="button" data-layout="hidden">Grid</button>
+                  </div>
+                </div>
+                <div class="checks">
+                  <label><input id="show-icons" type="checkbox" checked/> Icons</label>
+                  <label><input id="hide-border" type="checkbox"/> Hide border</label>
+                  <label><input id="hide-title" type="checkbox"/> Hide title</label>
+                  <label><input id="centre-title" type="checkbox"/> Centre title</label>
+                </div>
+              </div>
+
+            </div>
+          </form>
+
+          <!-- Right: Preview -->
+          <div class="preview-panel">
+            <div class="preview-header">
+              <span class="preview-label">Live preview</span>
+            </div>
+            <div class="preview-frame">
+              <div class="preview-toolbar" aria-hidden="true">
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+              </div>
+              <div class="preview-stage">
+                <div id="preview"></div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /workspace -->
+
+        <!-- Output -->
+        <section class="output-section" aria-labelledby="output-title">
+          <div class="output-header">
+            <h2 id="output-title">Use your embed</h2>
+            <p>Copy any format into your README, website, or profile.</p>
+          </div>
+          <div class="code-grid">
+            <article class="code-card">
+              <div class="code-card-header">
+                <span class="code-card-label">Link</span>
+                <button type="button" class="btn-copy" data-copy="link">Copy</button>
+              </div>
+              <code class="code-output" data-generated="link"></code>
+            </article>
+            <article class="code-card">
+              <div class="code-card-header">
+                <span class="code-card-label">Markdown</span>
+                <button type="button" class="btn-copy" data-copy="markdown">Copy</button>
+              </div>
+              <code class="code-output" data-generated="markdown"></code>
+            </article>
+            <article class="code-card">
+              <div class="code-card-header">
+                <span class="code-card-label">HTML</span>
+                <button type="button" class="btn-copy" data-copy="html">Copy</button>
+              </div>
+              <code class="code-output" data-generated="html"></code>
+            </article>
+          </div>
+        </section>
+
+        <!-- Community -->
+        <aside class="community-note" aria-label="Open source notice">
+          <div>
+            <h3>🚀 Built in the open</h3>
+            <p>Free and open-source. Got an idea, found a bug, or want to add a theme? ⭐ Star the repo or open a PR — every contribution counts.</p>
+          </div>
+          <a href="https://github.com/Namit-Rana6/Readme-Maker" class="btn-github">Contribute on GitHub</a>
+        </aside>
+
+        <footer class="site-footer">
+          <p>Built by <a href="https://github.com/Namit-Rana6">Namit Rana</a> — open source, free forever.</p>
+          <a href="https://github.com/Namit-Rana6/Readme-Maker">View source</a>
+        </footer>
+
+      </div><!-- /builder-page -->
     </main>
+
     <script>
       document.getElementById("home-page")?.classList.toggle("is-active", window.location.pathname !== "/builder");
       document.getElementById("builder-page")?.classList.toggle("is-active", window.location.pathname === "/builder");
