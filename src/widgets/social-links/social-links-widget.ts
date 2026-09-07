@@ -1,28 +1,43 @@
 import { detectPlatform } from "./platforms.ts";
 
-// Badge layout constants
-const BADGE_HEIGHT    = 36;
-const ICON_SIZE       = 16;
-const ICON_SCALE      = ICON_SIZE / 24;   // icon paths are on 24×24 grid
-const ICON_PADDING_L  = 10;               // left padding inside badge
-const TEXT_ICON_GAP   = 6;               // gap between icon and label
-const LABEL_PADDING_R = 12;              // right padding after label
-const BADGE_GAP       = 8;              // gap between badges
-const CARD_PAD_X      = 18;
-const CARD_PAD_Y      = 16;
-const BADGE_RADIUS    = 7;
-const CARD_RADIUS     = 10;
-const FONT_SIZE       = 12;
-const FONT_WEIGHT     = 700;
-// Approximate character width at 12px bold — used for layout estimation
-const CHAR_WIDTH      = 7.2;
+// ── Layout constants ──────────────────────────────────────────────────────────
+const BADGE_H     = 36;
+const ICON_SZ     = 16;
+const ICON_SCALE  = ICON_SZ / 24;
+const PAD_L       = 10;
+const GAP_TI      = 6;
+const PAD_R       = 12;
+const BADGE_GAP   = 8;
+const CARD_PAD_X  = 18;
+const CARD_PAD_Y  = 16;
+const BADGE_RX    = 7;
+const FONT_SZ     = 12;
+const CHAR_W      = 7.2;
 
-function estimateTextWidth(text: string): number {
-  return text.length * CHAR_WIDTH;
+// Title constants
+const TITLE_H     = 44;   // height reserved for title row
+const TITLE_Y     = 26;   // baseline y for title text
+const DIV_Y       = TITLE_H; // y of the separator line
+
+export interface SocialLinksRenderOptions {
+  background?:   string;
+  cardRadius?:   number;
+  maxWidth?:     number;
+  /** Title text — if empty/omitted, no title is shown */
+  title?:        string;
+  titleColor?:   string;
+  centreTitle?:  boolean;
+  hideBorder?:   boolean;
+  borderColor?:  string;
 }
 
-function escapeSvg(s: string): string {
-  return s
+interface SocialLinkEntry {
+  url:      string;
+  platform: ReturnType<typeof detectPlatform>;
+}
+
+function esc(s: string): string {
+  return String(s)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -30,143 +45,118 @@ function escapeSvg(s: string): string {
     .replace(/'/g, "&#x27;");
 }
 
-/**
- * Renders a single social badge as SVG elements.
- * Returns the badge markup and its pixel width.
- */
-function renderBadge(
-  entry: SocialLinkEntry,
-  x: number,
-  y: number,
-): { markup: string; width: number } {
-  const { platform, url } = entry;
-  const labelWidth  = estimateTextWidth(platform.label);
-  const badgeWidth  =
-    ICON_PADDING_L + ICON_SIZE + TEXT_ICON_GAP + labelWidth + LABEL_PADDING_R;
-
-  const iconY  = y + (BADGE_HEIGHT - ICON_SIZE) / 2;
-  const textY  = y + BADGE_HEIGHT / 2;
-  const textX  = x + ICON_PADDING_L + ICON_SIZE + TEXT_ICON_GAP;
-  const iconTx = x + ICON_PADDING_L;
-
-  const markup =
-    // clickable link wrapper
-    `<a href="${escapeSvg(url)}" target="_blank" rel="noopener noreferrer">` +
-    // badge background
-    `<rect x="${x}" y="${y}" width="${badgeWidth}" height="${BADGE_HEIGHT}" rx="${BADGE_RADIUS}" fill="${platform.color}"/>` +
-    // icon — translate to position, scale from 24→16
-    `<g transform="translate(${iconTx} ${iconY}) scale(${ICON_SCALE})" fill="${platform.textColor}">` +
-    platform.iconPath +
-    `</g>` +
-    // label text
-    `<text x="${textX}" y="${textY}" ` +
-    `dominant-baseline="middle" ` +
-    `font-family="Inter,Segoe UI,sans-serif" ` +
-    `font-size="${FONT_SIZE}" font-weight="${FONT_WEIGHT}" ` +
-    `fill="${platform.textColor}" letter-spacing=".02em">` +
-    escapeSvg(platform.label) +
-    `</text>` +
-    `</a>`;
-
-  return { markup, width: badgeWidth };
+function badgeWidth(label: string): number {
+  return PAD_L + ICON_SZ + GAP_TI + label.length * CHAR_W + PAD_R;
 }
 
-/**
- * Renders the full social links card as an SVG string.
- * Badges flow left-to-right. If they exceed maxWidth they wrap to a new row.
- */
+function renderBadge(entry: SocialLinkEntry, x: number, y: number): string {
+  const { platform, url } = entry;
+  const bw    = badgeWidth(platform.label);
+  const iconY = y + (BADGE_H - ICON_SZ) / 2;
+  const textX = x + PAD_L + ICON_SZ + GAP_TI;
+  const textY = y + BADGE_H / 2;
+
+  return (
+    `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">` +
+    `<rect x="${x}" y="${y}" width="${bw}" height="${BADGE_H}" rx="${BADGE_RX}" fill="${platform.color}"/>` +
+    `<g transform="translate(${x + PAD_L} ${iconY}) scale(${ICON_SCALE})" fill="${platform.textColor}">` +
+    platform.iconPath +
+    `</g>` +
+    `<text x="${textX}" y="${textY}" dominant-baseline="middle" ` +
+    `font-family="Inter,Segoe UI,sans-serif" font-size="${FONT_SZ}" font-weight="700" ` +
+    `fill="${platform.textColor}" letter-spacing=".02em">${esc(platform.label)}</text>` +
+    `</a>`
+  );
+}
+
 export function renderSocialLinksCard(
   urls: string[],
-  options: {
-    background?: string;
-    badgeGap?: number;
-    cardRadius?: number;
-    maxWidth?: number;
-  } = {},
+  options: SocialLinksRenderOptions = {},
 ): string {
-  const bg         = options.background ?? "#0d1117";
-  const gap        = options.badgeGap   ?? BADGE_GAP;
-  const cardRx     = options.cardRadius ?? CARD_RADIUS;
-  const maxW       = options.maxWidth   ?? 900;
+  const bg          = options.background  ?? "#0d1117";
+  const cardRx      = options.cardRadius  ?? 10;
+  const maxW        = options.maxWidth    ?? 900;
+  const titleText   = options.title?.trim() ?? "";
+  const showTitle   = titleText.length > 0;
+  const titleColor  = options.titleColor  ?? "#a371f7";
+  const centreTitle = options.centreTitle ?? false;
+  const hideBorder  = options.hideBorder  ?? false;
+  const borderColor = options.borderColor ?? "#30363d";
 
-  // Build entries
+  const topOffset = showTitle ? TITLE_H : CARD_PAD_Y;
+
   const entries: SocialLinkEntry[] = urls
     .map((u) => u.trim())
     .filter(Boolean)
-    .map((url) => ({
-      platform: detectPlatform(url),
-      url,
-    }));
+    .map((url) => ({ url, platform: detectPlatform(url) }));
 
   if (entries.length === 0) {
-    const w = 400; const h = 68;
+    const w = 400;
+    const h = topOffset + BADGE_H + CARD_PAD_Y;
     return (
       `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">` +
-      `<rect width="${w}" height="${h}" rx="${cardRx}" fill="${bg}"/>` +
-      `<text x="${w / 2}" y="${h / 2}" dominant-baseline="middle" text-anchor="middle" ` +
+      `<rect width="${w}" height="${h}" rx="${cardRx}" fill="${bg}"` +
+      (hideBorder ? "" : ` stroke="${borderColor}" stroke-width="1.5"`) + `/>` +
+      (showTitle ? titleMarkup(titleText, w, TITLE_Y, titleColor, centreTitle) : "") +
+      (showTitle ? `<line x1="12" y1="${DIV_Y}" x2="${w - 12}" y2="${DIV_Y}" stroke="${borderColor}" stroke-width="1" opacity="0.6"/>` : "") +
+      `<text x="${w / 2}" y="${topOffset + BADGE_H / 2}" dominant-baseline="middle" text-anchor="middle" ` +
       `font-family="Inter,sans-serif" font-size="13" fill="#6b7280">Add at least one link</text>` +
       `</svg>`
     );
   }
 
-  // Layout: wrap badges into rows
+  // Flow badges into rows
   type Row = Array<{ entry: SocialLinkEntry; x: number }>;
   const rows: Row[] = [];
-  let currentRow: Row = [];
+  let curRow: Row = [];
   let curX = CARD_PAD_X;
-  let maxRowWidth = 0;
+  let maxRowW = 0;
 
   for (const entry of entries) {
-    const labelW    = estimateTextWidth(entry.platform.label);
-    const badgeW    = ICON_PADDING_L + ICON_SIZE + TEXT_ICON_GAP + labelW + LABEL_PADDING_R;
-    const nextX     = curX + badgeW;
-    const wouldEnd  = nextX + (currentRow.length > 0 ? gap : 0);
-
-    if (currentRow.length > 0 && wouldEnd + badgeW > maxW - CARD_PAD_X) {
-      rows.push(currentRow);
-      maxRowWidth = Math.max(maxRowWidth, curX - gap);
-      currentRow = [];
+    const bw = badgeWidth(entry.platform.label);
+    if (curRow.length > 0 && curX + bw > maxW - CARD_PAD_X) {
+      rows.push(curRow);
+      maxRowW = Math.max(maxRowW, curX - BADGE_GAP);
+      curRow = [];
       curX = CARD_PAD_X;
     }
-
-    currentRow.push({ entry, x: curX });
-    curX += badgeW + gap;
+    curRow.push({ entry, x: curX });
+    curX += bw + BADGE_GAP;
   }
-  if (currentRow.length > 0) {
-    rows.push(currentRow);
-    maxRowWidth = Math.max(maxRowWidth, curX - gap);
+  if (curRow.length > 0) {
+    rows.push(curRow);
+    maxRowW = Math.max(maxRowW, curX - BADGE_GAP);
   }
 
-  const totalRows   = rows.length;
-  const cardW       = Math.min(maxW, maxRowWidth + CARD_PAD_X);
-  const cardH       = CARD_PAD_Y * 2 + totalRows * BADGE_HEIGHT + (totalRows - 1) * gap;
+  const rowCount = rows.length;
+  const cardW    = Math.min(maxW, maxRowW + CARD_PAD_X);
+  const cardH    = topOffset + rowCount * BADGE_H + (rowCount - 1) * BADGE_GAP + CARD_PAD_Y;
 
-  let allMarkup = "";
-  rows.forEach((row, rowIdx) => {
-    const rowY = CARD_PAD_Y + rowIdx * (BADGE_HEIGHT + gap);
+  let inner = "";
+  rows.forEach((row, ri) => {
+    const rowY = topOffset + ri * (BADGE_H + BADGE_GAP);
     for (const { entry, x } of row) {
-      const { markup } = renderBadge(entry, x, rowY);
-      allMarkup += markup;
+      inner += renderBadge(entry, x, rowY);
     }
   });
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${cardW}" height="${cardH}" viewBox="0 0 ${cardW} ${cardH}">` +
-    `<rect width="${cardW}" height="${cardH}" rx="${cardRx}" fill="${bg}"/>` +
-    allMarkup +
+    `<rect width="${cardW}" height="${cardH}" rx="${cardRx}" fill="${bg}"` +
+    (hideBorder ? "" : ` stroke="${borderColor}" stroke-width="1.5"`) + `/>` +
+    (showTitle ? titleMarkup(titleText, cardW, TITLE_Y, titleColor, centreTitle) : "") +
+    (showTitle ? `<line x1="12" y1="${DIV_Y}" x2="${cardW - 12}" y2="${DIV_Y}" stroke="${borderColor}" stroke-width="1" opacity="0.6"/>` : "") +
+    inner +
     `</svg>`
   );
 }
 
-/**
- * Parse a URL to get a clean display hostname (for the tooltip / aria-label).
- */
-export function getDisplayUrl(url: string): string {
-  try {
-    if (url.startsWith("mailto:")) return url.replace("mailto:", "");
-    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
-    return u.hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
+function titleMarkup(text: string, cardW: number, y: number, color: string, centre: boolean): string {
+  const x      = centre ? cardW / 2 : CARD_PAD_X;
+  const anchor = centre ? `text-anchor="middle" ` : "";
+  return (
+    `<text x="${x}" y="${y}" ${anchor}` +
+    `font-family="Inter,Segoe UI,sans-serif" font-size="15" font-weight="700" ` +
+    `fill="${color}">${esc(text)}</text>`
+  );
 }

@@ -54,15 +54,19 @@ function badgeWidth(label) {
   return PAD_L + ICON_SZ + GAP_TI + label.length * CHAR_W + PAD_R;
 }
 
-function renderSocialCardSvg(urls, bg, cardRx, maxW) {
+function renderSocialCardSvg(urls, bg, cardRx, maxW, titleText = "", titleColor = "#a371f7", centreTitle = false, hideBorder = false, borderColor = "#30363d") {
   const entries = urls.map((u) => ({ url: u, platform: detectPlatform(u) }));
+  const showTitle = titleText.trim().length > 0;
+  const TITLE_H = 44;
+  const topOffset = showTitle ? TITLE_H : CARD_PAD_Y;
 
   if (entries.length === 0) {
-    const w = 400; const h = 68;
+    const w = 400; const h = topOffset + BADGE_H + CARD_PAD_Y;
     return (
       `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">` +
-      `<rect width="${w}" height="${h}" rx="${cardRx}" fill="${bg}"/>` +
-      `<text x="${w/2}" y="${h/2}" dominant-baseline="middle" text-anchor="middle" ` +
+      `<rect width="${w}" height="${h}" rx="${cardRx}" fill="${bg}"${hideBorder ? "" : ` stroke="${borderColor}" stroke-width="1.5"`}/>` +
+      (showTitle ? makeTitleSvg(titleText, w, titleColor, centreTitle, borderColor) : "") +
+      `<text x="${w/2}" y="${topOffset + BADGE_H/2}" dominant-baseline="middle" text-anchor="middle" ` +
       `font-family="Inter,sans-serif" font-size="13" fill="#6b7280">Add at least one link</text>` +
       `</svg>`
     );
@@ -93,11 +97,11 @@ function renderSocialCardSvg(urls, bg, cardRx, maxW) {
 
   const rowCount = rows.length;
   const cardW = Math.min(maxW, maxRowW + CARD_PAD_X);
-  const cardH = CARD_PAD_Y * 2 + rowCount * BADGE_H + (rowCount - 1) * BADGE_GAP;
+  const cardH = topOffset + rowCount * BADGE_H + (rowCount - 1) * BADGE_GAP + CARD_PAD_Y;
 
   let inner = "";
   rows.forEach((row, ri) => {
-    const rowY = CARD_PAD_Y + ri * (BADGE_H + BADGE_GAP);
+    const rowY = topOffset + ri * (BADGE_H + BADGE_GAP);
     for (const { entry: { url, platform }, x } of row) {
       const bw    = badgeWidth(platform.label);
       const iconY = rowY + (BADGE_H - ICON_SZ) / 2;
@@ -118,9 +122,21 @@ function renderSocialCardSvg(urls, bg, cardRx, maxW) {
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${cardW}" height="${cardH}" viewBox="0 0 ${cardW} ${cardH}">` +
-    `<rect width="${cardW}" height="${cardH}" rx="${cardRx}" fill="${bg}"/>` +
+    `<rect width="${cardW}" height="${cardH}" rx="${cardRx}" fill="${bg}"${hideBorder ? "" : ` stroke="${borderColor}" stroke-width="1.5"`}/>` +
+    (showTitle ? makeTitleSvg(titleText, cardW, titleColor, centreTitle, borderColor) : "") +
     inner +
     `</svg>`
+  );
+}
+
+function makeTitleSvg(text, cardW, color, centre, borderColor) {
+  const x      = centre ? cardW / 2 : 18;
+  const anchor = centre ? ` text-anchor="middle"` : "";
+  return (
+    `<text x="${x}" y="26"${anchor} ` +
+    `font-family="Inter,Segoe UI,sans-serif" font-size="15" font-weight="700" ` +
+    `fill="${color}">${escapeXml(text)}</text>` +
+    `<line x1="12" y1="44" x2="${cardW - 12}" y2="44" stroke="${borderColor}" stroke-width="1" opacity="0.6"/>`
   );
 }
 
@@ -133,12 +149,17 @@ export default function handler(req, res) {
   }
 
   const url    = new URL(req.url ?? "/", `https://${req.headers.host ?? "localhost"}`);
-  const links  = url.searchParams.getAll("link").map((l) => l.trim()).filter(Boolean);
-  const bg     = url.searchParams.get("bg")     ?? "#0d1117";
-  const radius = Number(url.searchParams.get("radius") ?? 10);
-  const maxW   = Number(url.searchParams.get("maxw")   ?? 900);
+  const links       = url.searchParams.getAll("link").map((l) => l.trim()).filter(Boolean);
+  const bg          = url.searchParams.get("bg")          ?? "#0d1117";
+  const radius      = Number(url.searchParams.get("radius")      ?? 10);
+  const maxW        = Number(url.searchParams.get("maxw")        ?? 900);
+  const title       = url.searchParams.get("title")       ?? "";
+  const titleColor  = url.searchParams.get("titleColor")  ?? "#a371f7";
+  const centreTitle = url.searchParams.get("centreTitle") === "1";
+  const hideBorder  = url.searchParams.get("hideBorder")  === "1";
+  const borderColor = url.searchParams.get("borderColor") ?? "#30363d";
 
-  const svg = renderSocialCardSvg(links, bg, radius, maxW);
+  const svg = renderSocialCardSvg(links, bg, radius, maxW, title, titleColor, centreTitle, hideBorder, borderColor);
 
   res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=600");
