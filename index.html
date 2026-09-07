@@ -496,7 +496,35 @@
       .builder-page { display: none; }
       .builder-page.is-active { display: block; }
 
-      /* ── Responsive ──────────────────────────────────────────────────── */
+      /* ── Social links builder ────────────────────────────────────────── */
+      .sl-builder { display: flex; flex-direction: column; gap: 0; }
+      .sl-section { padding: 18px 22px; border-bottom: 1px solid var(--line); }
+      .sl-section:last-child { border-bottom: none; }
+      .sl-section-title { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+      .sl-hint { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+      .sl-link-rows { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+      .sl-link-row { display: flex; gap: 6px; align-items: center; }
+      .sl-link-input { flex: 1; padding: 9px 12px; background: var(--bg2); border: 1px solid var(--line2); border-radius: 7px; color: var(--text); font: inherit; font-size: 12px; outline: none; }
+      .sl-link-input:focus { border-color: var(--accent); }
+      .sl-link-input::placeholder { color: var(--muted); }
+      .sl-remove-btn { border: 1px solid var(--line2); border-radius: 6px; width: 28px; height: 28px; background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+      .sl-remove-btn:hover { color: var(--red); border-color: var(--red); }
+      .sl-add-btn { border: 1px dashed var(--line2); border-radius: 7px; padding: 8px 14px; background: transparent; color: var(--subtle); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%; text-align: left; transition: border-color .12s, color .12s; }
+      .sl-add-btn:hover { border-color: var(--accent); color: var(--accent2); }
+      .sl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+      .sl-row:last-child { margin-bottom: 0; }
+      .sl-label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+      .sl-row-right { display: flex; align-items: center; gap: 8px; }
+      .sl-color-input { width: 28px; height: 28px; border: 1px solid var(--line2); border-radius: 50%; padding: 0; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; }
+      .sl-color-input::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
+      .sl-color-input::-webkit-color-swatch { border: none; border-radius: 50%; }
+      .sl-hex-label { font-size: 11px; font-family: monospace; color: var(--subtle); }
+      .sl-range { width: 120px; accent-color: var(--accent); }
+      .sl-range-val { font-size: 12px; font-weight: 700; color: var(--accent2); min-width: 20px; text-align: right; }
+      .sl-platforms { padding: 14px 22px; }
+      .sl-platform-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .sl-chip { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+
       @media (max-width: 900px) {
         .workspace { grid-template-columns: 1fr; }
         .preview-panel { position: static; }
@@ -576,10 +604,16 @@
                 <div class="embed-tabs" role="tablist">
                   <button class="active" type="button" data-mode="stats">Stats Card</button>
                   <button type="button" data-mode="languages">Languages</button>
-                  <button type="button" data-mode="badge">Badge</button>
+                  <button type="button" data-mode="badge">Social Links</button>
                   <button type="button" data-mode="sparkline">Sparkline</button>
                 </div>
               </div>
+
+              <!-- Social links builder mount point (shown when badge tab active) -->
+              <div id="social-links-panel" style="display:none;"></div>
+
+              <!-- Stats card controls (shown by default) -->
+              <div id="stats-card-controls">
 
               <!-- Username -->
               <div class="form-section">
@@ -689,7 +723,9 @@
                 </div>
               </div>
 
-            </div>
+              </div><!-- /stats-card-controls -->
+
+            </div><!-- /form-panel -->
           </form>
 
           <!-- Right: Preview -->

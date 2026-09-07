@@ -3,6 +3,7 @@ import { fetchGitHubStats } from "./src/data/github/client.ts";
 import { resolveTheme, COLOR_KEYS } from "./src/core/themes.js";
 import { STAT_KEYS } from "./src/widgets/github-stats/stat-definitions.js";
 import { renderStatsSvg, renderGridSvg } from "./api/render-stats.js";
+import socialCardHandler from "./api/social-card.js";
 
 const PORT = Number(process.env.PORT || 3001);
 
@@ -26,6 +27,25 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/health") {
     sendJson(res, 200, { ok: true });
+    return;
+  }
+
+  // Social links card — no token needed
+  if (url.pathname === "/api/social-card") {
+    // Adapt Node http req/res to the Vercel-style handler
+    const vercelRes = {
+      _headers: {},
+      _status: 200,
+      _body: "",
+      setHeader(k, v) { this._headers[k] = v; },
+      status(code) { this._status = code; return this; },
+      send(body) {
+        res.writeHead(this._status, this._headers);
+        res.end(body);
+      },
+      end() { res.writeHead(this._status, this._headers); res.end(); },
+    };
+    await socialCardHandler(req, vercelRes);
     return;
   }
 

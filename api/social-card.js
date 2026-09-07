@@ -1,0 +1,147 @@
+/**
+ * GET /api/social-card
+ *
+ * Query params:
+ *   link   — repeatable, one per social URL  (e.g. ?link=https://github.com/x&link=https://linkedin.com/in/y)
+ *   bg     — card background hex  (default #0d1117)
+ *   radius — card corner radius   (default 10)
+ *
+ * Returns an SVG image.  No GitHub token required — purely client-side data.
+ */
+
+import { PLATFORMS } from "../src/widgets/social-links/platforms.js";
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function escapeXml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
+function detectPlatform(url) {
+  if (url.startsWith("mailto:")) {
+    return PLATFORMS.find((p) => p.key === "email") ?? PLATFORMS[PLATFORMS.length - 1];
+  }
+  for (const p of PLATFORMS) {
+    if (p.match.test(url)) return p;
+  }
+  return {
+    key: "link", label: "Link",
+    color: "#4b5563", textColor: "#ffffff",
+    iconPath: `<path fill="currentColor" d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>`,
+  };
+}
+
+// Badge layout constants — kept in sync with social-links-widget.ts
+const BADGE_H    = 36;
+const ICON_SZ    = 16;
+const ICON_SCALE = ICON_SZ / 24;
+const PAD_L      = 10;
+const GAP_TI     = 6;   // icon → text
+const PAD_R      = 12;
+const BADGE_GAP  = 8;
+const CARD_PAD_X = 18;
+const CARD_PAD_Y = 16;
+const BADGE_RX   = 7;
+const FONT_SZ    = 12;
+const CHAR_W     = 7.2; // approximate px per char at 12px bold
+
+function badgeWidth(label) {
+  return PAD_L + ICON_SZ + GAP_TI + label.length * CHAR_W + PAD_R;
+}
+
+function renderSocialCardSvg(urls, bg, cardRx, maxW) {
+  const entries = urls.map((u) => ({ url: u, platform: detectPlatform(u) }));
+
+  if (entries.length === 0) {
+    const w = 400; const h = 68;
+    return (
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">` +
+      `<rect width="${w}" height="${h}" rx="${cardRx}" fill="${bg}"/>` +
+      `<text x="${w/2}" y="${h/2}" dominant-baseline="middle" text-anchor="middle" ` +
+      `font-family="Inter,sans-serif" font-size="13" fill="#6b7280">Add at least one link</text>` +
+      `</svg>`
+    );
+  }
+
+  // Flow badges into rows
+  const rows = [];
+  let curRow = [];
+  let curX = CARD_PAD_X;
+  let maxRowW = 0;
+
+  for (const entry of entries) {
+    const bw = badgeWidth(entry.platform.label);
+    const wouldEnd = curX + bw;
+    if (curRow.length > 0 && wouldEnd > maxW - CARD_PAD_X) {
+      rows.push(curRow);
+      maxRowW = Math.max(maxRowW, curX - BADGE_GAP);
+      curRow = [];
+      curX = CARD_PAD_X;
+    }
+    curRow.push({ entry, x: curX });
+    curX += bw + BADGE_GAP;
+  }
+  if (curRow.length > 0) {
+    rows.push(curRow);
+    maxRowW = Math.max(maxRowW, curX - BADGE_GAP);
+  }
+
+  const rowCount = rows.length;
+  const cardW = Math.min(maxW, maxRowW + CARD_PAD_X);
+  const cardH = CARD_PAD_Y * 2 + rowCount * BADGE_H + (rowCount - 1) * BADGE_GAP;
+
+  let inner = "";
+  rows.forEach((row, ri) => {
+    const rowY = CARD_PAD_Y + ri * (BADGE_H + BADGE_GAP);
+    for (const { entry: { url, platform }, x } of row) {
+      const bw    = badgeWidth(platform.label);
+      const iconY = rowY + (BADGE_H - ICON_SZ) / 2;
+      const textX = x + PAD_L + ICON_SZ + GAP_TI;
+      const textY = rowY + BADGE_H / 2;
+      inner +=
+        `<a href="${escapeXml(url)}" target="_blank" rel="noopener noreferrer">` +
+        `<rect x="${x}" y="${rowY}" width="${bw}" height="${BADGE_H}" rx="${BADGE_RX}" fill="${platform.color}"/>` +
+        `<g transform="translate(${x + PAD_L} ${iconY}) scale(${ICON_SCALE})" fill="${platform.textColor}">` +
+        platform.iconPath +
+        `</g>` +
+        `<text x="${textX}" y="${textY}" dominant-baseline="middle" ` +
+        `font-family="Inter,Segoe UI,sans-serif" font-size="${FONT_SZ}" font-weight="700" ` +
+        `fill="${platform.textColor}" letter-spacing=".02em">${escapeXml(platform.label)}</text>` +
+        `</a>`;
+    }
+  });
+
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${cardW}" height="${cardH}" viewBox="0 0 ${cardW} ${cardH}">` +
+    `<rect width="${cardW}" height="${cardH}" rx="${cardRx}" fill="${bg}"/>` +
+    inner +
+    `</svg>`
+  );
+}
+
+// ── Vercel handler ────────────────────────────────────────────────────────────
+
+export default function handler(req, res) {
+  if (req.method === "OPTIONS") {
+    res.status(204).end();
+    return;
+  }
+
+  const url    = new URL(req.url ?? "/", `https://${req.headers.host ?? "localhost"}`);
+  const links  = url.searchParams.getAll("link").map((l) => l.trim()).filter(Boolean);
+  const bg     = url.searchParams.get("bg")     ?? "#0d1117";
+  const radius = Number(url.searchParams.get("radius") ?? 10);
+  const maxW   = Number(url.searchParams.get("maxw")   ?? 900);
+
+  const svg = renderSocialCardSvg(links, bg, radius, maxW);
+
+  res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=600");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.status(200).send(svg);
+}

@@ -11,6 +11,7 @@ import {
   GitHubGridWidget,
 } from "./widgets/github-embeds";
 import type { GitHubStatsData } from "./widgets/github-stats/types";
+import { initSocialLinksBuilder, teardownSocialLinksBuilder } from "./widgets/social-links/social-links-ui";
 
 const BACKEND_STATS_URL = "/api/github/stats";
 
@@ -256,18 +257,37 @@ if (typeof document !== "undefined") {
   });
   input?.addEventListener("input", updateGeneratedCode);
 
+  const statsCardControls = document.getElementById("stats-card-controls");
+  const socialLinksPanel  = document.getElementById("social-links-panel");
+
+  // Show/hide the right panel when mode changes
+  function switchMode(mode: string) {
+    if (mode === "badge") {
+      if (statsCardControls) statsCardControls.style.display = "none";
+      if (socialLinksPanel)  socialLinksPanel.style.display  = "block";
+      initSocialLinksBuilder(preview, socialLinksPanel);
+    } else {
+      if (statsCardControls) statsCardControls.style.display = "block";
+      if (socialLinksPanel)  { socialLinksPanel.style.display = "none"; teardownSocialLinksBuilder(socialLinksPanel); }
+    }
+  }
+
   document.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach((button) => {
     button.addEventListener("click", () => {
       document.querySelectorAll("[data-mode]").forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       selectedMode = button.dataset.mode ?? "stats";
+      switchMode(selectedMode);
       updateGeneratedCode();
       if (selectedMode === "stats") {
         rerender();
         if (status) status.textContent = "Live preview refreshes automatically";
         return;
       }
-
+      if (selectedMode === "badge") {
+        if (status) status.textContent = "Social links card";
+        return;
+      }
       renderGitHubStatsPreview(preview, latestData);
       if (status) status.textContent = `${button.textContent} coming soon`;
     });
