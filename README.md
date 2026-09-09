@@ -16,9 +16,13 @@ Generate GitHub stats cards and social links banners for your profile README. Co
 
 ![GitHub Grid for Namit-Rana6](https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=midnight&radius=8&layout=hidden&stats=followers%2Ccommits%2CpullRequests%2Cissues%2Ccontributions%2Crepositories)
 
-### Social Links Card
+### Social Links Card — Flow
 
-![Social Links](https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&bg=%230d1117&radius=10)
+![Social Links](https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&link=https://stackoverflow.com/users/namit&bg=%230d1117&radius=10&title=Connect+with+me&centreTitle=1)
+
+### Social Links Card — Grid (icons only)
+
+![Social Links Grid](https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&link=https://leetcode.com/namit&link=https://kaggle.com/namit&link=https://medium.com/@namit&link=https://stackoverflow.com/users/namit&bg=%230d1117&radius=10&cols=3&maxw=500&iconsOnly=1)
 
 ---
 
@@ -28,11 +32,14 @@ Generate GitHub stats cards and social links banners for your profile README. Co
 |---|---|
 | 📊 | **Stats Card** — row list or 3×N grid, 11 selectable metrics |
 | 🔗 | **Social Links Card** — auto-detects platform, colored badges, drag-to-reorder |
+| 🏗️ | **Grid layout** for social links — N columns, equal-width cells |
+| 🔵 | **Icons only mode** — square icon badges, no label text |
 | 🎨 | **9 built-in themes** + full custom theme (6 hex slots) |
 | ✏️ | **Custom title**, title color, centre-align |
 | 🔲 | **Border radius**, show/hide border, show/hide title |
 | 👁️ | **Show/hide icons** per card |
 | 📐 | **Dynamic grid sizing** — 3×1 / 3×2 / 3×3 based on stat count |
+| 📏 | **Card width** (400–900px) and **badge height** (32–56px) sliders |
 | 🔒 | **Single URL contract** — preview = embed, always |
 | ⚡ | **Vercel serverless** — no separate backend deploy |
 | 🔁 | **Public REST fallback** — loads without token |
@@ -111,7 +118,7 @@ GET https://readme-maker-ashen.vercel.app/api/stats
 
 ## Social Links Card
 
-No GitHub token required. Add any platform URLs — the card auto-detects the platform and renders a colored badge row.
+No GitHub token required. Add any platform URLs — the card auto-detects the platform and renders colored badges. Supports two layouts: **Flow** (badges wrap naturally) and **Grid** (fixed N-column table).
 
 ### Endpoint
 
@@ -131,22 +138,53 @@ GET https://readme-maker-ashen.vercel.app/api/social-card
 | `centreTitle` | off | `1` to centre-align the title |
 | `hideBorder` | off | `1` to hide the card border |
 | `borderColor` | `#30363d` | Card border color |
+| `cols` | — | Number of grid columns (1–5). Omit for flow layout |
+| `maxw` | `900` | Max card width in px (used in grid mode, 400–900) |
+| `bh` | `36` | Badge height in px (32–56, grid mode) |
+| `iconsOnly` | off | `1` to render square icon-only badges (no label text) |
 
-### Supported Platforms
+### Layout modes
 
-GitHub · LinkedIn · X (Twitter) · Email · Kaggle · LeetCode · GeeksForGeeks · Portfolio · Stack Overflow · Medium
-
-### Example
+**Flow** (default) — badges sit in a row and wrap when they reach the card edge. Card width fits content.
 
 ```md
-![Links](https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&link=mailto:namit@example.com&bg=%230d1117&radius=10)
+![Links](https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&bg=%230d1117&radius=10)
 ```
 
-With title:
+**Grid** — badges fill a fixed N-column grid. All cells equal width.
+
+```md
+![Links](https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&link=https://leetcode.com/namit&cols=3&maxw=500)
+```
+
+**Icons only** — works with both layouts. Badges become square, showing only the platform icon.
+
+```md
+![Links](https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&cols=3&maxw=400&iconsOnly=1)
+```
+
+**With title:**
 
 ```md
 ![Links](https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&title=Connect+with+me&centreTitle=1)
 ```
+
+### Supported Platforms
+
+| Platform | Detected by |
+|---|---|
+| GitHub | `github.com` |
+| LinkedIn | `linkedin.com` |
+| X / Twitter | `twitter.com`, `x.com` |
+| Email | any `@` address, `mailto:`, outlook / hotmail / yahoo / rediff / proton / icloud / zoho |
+| Kaggle | `kaggle.com` |
+| LeetCode | `leetcode.com` |
+| GeeksForGeeks | `geeksforgeeks.org` |
+| Portfolio | `.dev`, `.me`, `.io`, `portfolio`, `personal` |
+| Stack Overflow | `stackoverflow.com` |
+| Medium | `medium.com` |
+
+Any unrecognised URL falls back to a generic "Link" badge.
 
 ---
 
@@ -191,7 +229,7 @@ With title:
         │   ├── github-stats.ts             # Stats Card (browser)
         │   ├── stat-definitions.js         # 11-stat list (shared)
         │   └── stat-row.ts                 # Row renderer
-        ├── github-embeds.ts                # Grid / Languages / Sparkline
+        ├── github-embeds.ts                # Grid widget
         └── social-links/
             ├── platforms.js/.ts            # Platform defs (shared)
             ├── social-links-widget.ts      # SVG renderer (browser)
@@ -273,7 +311,7 @@ All icons are inlined as `<g>` + `<path>` elements — no nested `<svg>`. GitHub
 
 ### URL contract
 
-The builder reads every control (theme, stats, title, radius, icons, border, layout…) and encodes it into a single URL. The API reads that same URL and produces exactly what the preview showed. No divergence.
+The builder reads every control (theme, stats, title, radius, icons, border, layout, grid columns, badge height, icons-only…) and encodes it into a single URL. The API reads that same URL and produces exactly what the preview showed. No divergence.
 
 ---
 

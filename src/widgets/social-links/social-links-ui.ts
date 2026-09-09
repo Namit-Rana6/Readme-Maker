@@ -24,6 +24,10 @@ function buildEmbedUrl(
   centreTitle: boolean,
   hideBorder:  boolean,
   borderColor: string,
+  gridCols:    number,
+  cardWidth:   number,
+  badgeHeight: number,
+  iconsOnly:   boolean,
 ): string {
   const p = new URLSearchParams();
   for (const l of links.filter(Boolean)) p.append("link", l);
@@ -34,15 +38,24 @@ function buildEmbedUrl(
   if (centreTitle)                       p.set("centreTitle", "1");
   if (hideBorder)                        p.set("hideBorder",  "1");
   if (borderColor !== "#30363d")         p.set("borderColor", borderColor);
+  if (gridCols    >= 1)                  p.set("cols",        String(gridCols));
+  if (gridCols    >= 1 && cardWidth > 0) p.set("maxw",        String(cardWidth));
+  if (gridCols    >= 1 && badgeHeight > 0 && badgeHeight !== 36)
+                                         p.set("bh",          String(badgeHeight));
+  if (iconsOnly)                         p.set("iconsOnly",   "1");
   return `${PROD_BASE}/api/social-card?${p}`;
 }
 
 function pushOutputs(
   links: string[], bg: string, radius: number,
   title: string, titleColor: string, centreTitle: boolean,
-  hideBorder: boolean, borderColor: string, username: string,
+  hideBorder: boolean, borderColor: string,
+  gridCols: number, cardWidth: number, badgeHeight: number,
+  iconsOnly: boolean,
+  username: string,
 ): void {
-  const url = buildEmbedUrl(links, bg, radius, title, titleColor, centreTitle, hideBorder, borderColor);
+  const url = buildEmbedUrl(links, bg, radius, title, titleColor, centreTitle,
+    hideBorder, borderColor, gridCols, cardWidth, badgeHeight, iconsOnly);
   const set = (key: string, val: string) => {
     const el = document.querySelector<HTMLElement>(`[data-generated="${key}"]`);
     if (el) el.textContent = val;
@@ -201,6 +214,17 @@ export function initSocialLinksBuilder(
       .sl-platforms { padding:14px 22px; }
       .sl-chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
       .sl-chip { display:inline-block; padding:3px 9px; border-radius:999px; font-size:10px; font-weight:700; letter-spacing:.04em; }
+
+      /* layout toggle */
+      .sl-layout-toggle { display:flex; gap:3px; background:var(--bg); border:1px solid var(--line2); border-radius:7px; padding:3px; }
+      .sl-layout-btn { border:0; border-radius:5px; padding:5px 12px; font:inherit; font-size:11px; font-weight:600; color:var(--muted); background:transparent; cursor:pointer; transition:color .12s,background .12s; }
+      .sl-layout-btn.active { color:var(--white); background:var(--surface2); box-shadow:0 0 0 1px var(--line2); }
+
+      /* column picker */
+      .sl-col-picker { display:flex; gap:3px; }
+      .sl-col-btn { width:30px; height:28px; border:1px solid var(--line2); border-radius:6px; background:transparent; color:var(--muted); font:inherit; font-size:12px; font-weight:700; cursor:pointer; transition:color .12s,border-color .12s,background .12s; }
+      .sl-col-btn.active { color:var(--white); border-color:var(--accent); background:rgba(124,106,247,.15); }
+      .sl-col-btn:hover:not(.active) { color:var(--subtle); background:var(--surface2); }
     `;
     document.head.appendChild(s);
   }
@@ -237,6 +261,42 @@ export function initSocialLinksBuilder(
 
       <div class="sl-section">
         <div class="sl-section-title">Card options</div>
+        <div class="sl-row" style="margin-bottom:10px">
+          <span class="sl-label">Layout</span>
+          <div class="sl-row-right">
+            <div class="sl-layout-toggle">
+              <button type="button" class="sl-layout-btn active" data-layout="flow">Flow</button>
+              <button type="button" class="sl-layout-btn" data-layout="grid">Grid</button>
+            </div>
+          </div>
+        </div>
+        <div id="sl-grid-options" style="display:none;margin-bottom:12px;">
+          <div class="sl-row" style="margin-bottom:10px">
+            <span class="sl-label">Columns</span>
+            <div class="sl-row-right">
+              <div class="sl-col-picker">
+                <button type="button" class="sl-col-btn" data-cols="2">2</button>
+                <button type="button" class="sl-col-btn active" data-cols="3">3</button>
+                <button type="button" class="sl-col-btn" data-cols="4">4</button>
+                <button type="button" class="sl-col-btn" data-cols="5">5</button>
+              </div>
+            </div>
+          </div>
+          <div class="sl-row" style="margin-bottom:10px">
+            <span class="sl-label">Card width</span>
+            <div class="sl-row-right">
+              <input type="range" id="sl-card-width" min="400" max="900" step="50" value="500" class="sl-range"/>
+              <strong id="sl-card-width-val" class="sl-range-val">500</strong>
+            </div>
+          </div>
+          <div class="sl-row" style="margin-bottom:0">
+            <span class="sl-label">Badge height</span>
+            <div class="sl-row-right">
+              <input type="range" id="sl-badge-height" min="32" max="56" step="4" value="36" class="sl-range"/>
+              <strong id="sl-badge-height-val" class="sl-range-val">36</strong>
+            </div>
+          </div>
+        </div>
         <div class="sl-row">
           <span class="sl-label">Background</span>
           <div class="sl-row-right">
@@ -260,6 +320,7 @@ export function initSocialLinksBuilder(
         </div>
         <div class="sl-checks">
           <label class="sl-check-label"><input type="checkbox" id="sl-hide-border"/> Hide border</label>
+          <label class="sl-check-label"><input type="checkbox" id="sl-icons-only"/> Icons only</label>
         </div>
       </div>
 
@@ -289,6 +350,12 @@ export function initSocialLinksBuilder(
   const titleColHex   = containerEl.querySelector<HTMLElement>("#sl-title-color-hex")!;
   const centreCb      = containerEl.querySelector<HTMLInputElement>("#sl-centre-title")!;
   const hideBorderCb  = containerEl.querySelector<HTMLInputElement>("#sl-hide-border")!;
+  const iconsOnlyCb   = containerEl.querySelector<HTMLInputElement>("#sl-icons-only")!;
+
+  let layoutMode: "flow" | "grid" = "flow";
+  let gridCols    = 3;
+  let cardWidth   = 500;
+  let badgeHeight = 36;
 
   function getLinks(): string[] {
     return Array.from(linkRows.querySelectorAll<HTMLInputElement>(".sl-link-input"))
@@ -309,12 +376,20 @@ export function initSocialLinksBuilder(
       centreTitle:  centreCb.checked,
       hideBorder:   hideBorderCb.checked,
       borderColor:  borderColorIn.value,
+      gridCols:     layoutMode === "grid" ? gridCols : 0,
+      cardWidth:    layoutMode === "grid" ? cardWidth : undefined,
+      badgeHeight:  layoutMode === "grid" ? badgeHeight : undefined,
+      iconsOnly:    iconsOnlyCb.checked,
     });
     previewEl.innerHTML = svg;
     pushOutputs(
       getLinks(), bgIn.value, Number(radiusIn.value),
       titleIn.value.trim(), titleColorIn.value,
       centreCb.checked, hideBorderCb.checked, borderColorIn.value,
+      layoutMode === "grid" ? gridCols : 0,
+      layoutMode === "grid" ? cardWidth : 0,
+      layoutMode === "grid" ? badgeHeight : 0,
+      iconsOnlyCb.checked,
       getUsername(),
     );
   }
@@ -359,6 +434,37 @@ export function initSocialLinksBuilder(
   titleColorIn.addEventListener("input", () => { titleColHex.textContent = titleColorIn.value; rerender(); });
   centreCb.addEventListener("change",    rerender);
   hideBorderCb.addEventListener("change", rerender);
+  iconsOnlyCb.addEventListener("change",  rerender);
+
+  // layout toggle
+  const gridOptionsEl  = containerEl.querySelector<HTMLElement>("#sl-grid-options")!;
+  const cardWidthIn    = containerEl.querySelector<HTMLInputElement>("#sl-card-width")!;
+  const cardWidthLbl   = containerEl.querySelector<HTMLElement>("#sl-card-width-val")!;
+  const badgeHeightIn  = containerEl.querySelector<HTMLInputElement>("#sl-badge-height")!;
+  const badgeHeightLbl = containerEl.querySelector<HTMLElement>("#sl-badge-height-val")!;
+
+  cardWidthIn.addEventListener("input",   () => { cardWidth = Number(cardWidthIn.value); cardWidthLbl.textContent = cardWidthIn.value; rerender(); });
+  badgeHeightIn.addEventListener("input", () => { badgeHeight = Number(badgeHeightIn.value); badgeHeightLbl.textContent = badgeHeightIn.value; rerender(); });
+
+  containerEl.querySelectorAll<HTMLButtonElement>(".sl-layout-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      containerEl.querySelectorAll(".sl-layout-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      layoutMode = (btn.dataset.layout ?? "flow") as "flow" | "grid";
+      gridOptionsEl.style.display = layoutMode === "grid" ? "block" : "none";
+      rerender();
+    });
+  });
+
+  // column picker
+  containerEl.querySelectorAll<HTMLButtonElement>(".sl-col-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      containerEl.querySelectorAll(".sl-col-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      gridCols = Number(btn.dataset.cols ?? 3);
+      rerender();
+    });
+  });
 
   // seed
   addRow("https://github.com/");

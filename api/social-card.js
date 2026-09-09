@@ -54,7 +54,50 @@ function badgeWidth(label) {
   return PAD_L + ICON_SZ + GAP_TI + label.length * CHAR_W + PAD_R;
 }
 
-function renderSocialCardSvg(urls, bg, cardRx, maxW, titleText = "", titleColor = "#a371f7", centreTitle = false, hideBorder = false, borderColor = "#30363d") {
+/** Badge for grid mode — fixed width, content centred inside cell. Supports iconsOnly (square). */
+function renderBadgeGrid(url, platform, x, y, cellW, bH = BADGE_H, iconsOnly = false) {
+  const iconY = y + (bH - ICON_SZ) / 2;
+
+  if (iconsOnly) {
+    const iconTx = x + (cellW - ICON_SZ) / 2;
+    return (
+      `<a href="${escapeXml(url)}" target="_blank" rel="noopener noreferrer">` +
+      `<rect x="${x}" y="${y}" width="${cellW}" height="${bH}" rx="${BADGE_RX}" fill="${platform.color}"/>` +
+      `<g transform="translate(${iconTx} ${iconY}) scale(${ICON_SCALE})" fill="${platform.textColor}">` +
+      platform.iconPath + `</g>` +
+      `</a>`
+    );
+  }
+
+  const contentW  = ICON_SZ + GAP_TI + platform.label.length * CHAR_W;
+  const startX    = x + (cellW - contentW) / 2;
+  const textX     = startX + ICON_SZ + GAP_TI;
+  const textY     = y + bH / 2;
+  return (
+    `<a href="${escapeXml(url)}" target="_blank" rel="noopener noreferrer">` +
+    `<rect x="${x}" y="${y}" width="${cellW}" height="${bH}" rx="${BADGE_RX}" fill="${platform.color}"/>` +
+    `<g transform="translate(${startX} ${iconY}) scale(${ICON_SCALE})" fill="${platform.textColor}">` +
+    platform.iconPath + `</g>` +
+    `<text x="${textX}" y="${textY}" dominant-baseline="middle" ` +
+    `font-family="Inter,Segoe UI,sans-serif" font-size="${FONT_SZ}" font-weight="700" ` +
+    `fill="${platform.textColor}" letter-spacing=".02em">${escapeXml(platform.label)}</text>` +
+    `</a>`
+  );
+}
+
+/** Wrap SVG content with card background, border, and optional title. */
+function buildSvg(cardW, cardH, rx, bg, hideBorder, borderColor, showTitle, titleText, titleColor, centreTitle, inner) {
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${cardW}" height="${cardH}" viewBox="0 0 ${cardW} ${cardH}">` +
+    `<rect width="${cardW}" height="${cardH}" rx="${rx}" fill="${bg}"` +
+    (hideBorder ? "" : ` stroke="${borderColor}" stroke-width="1.5"`) + `/>` +
+    (showTitle ? makeTitleSvg(titleText, cardW, titleColor, centreTitle, borderColor) : "") +
+    inner +
+    `</svg>`
+  );
+}
+
+function renderSocialCardSvg(urls, bg, cardRx, maxW, titleText = "", titleColor = "#a371f7", centreTitle = false, hideBorder = false, borderColor = "#30363d", gridCols = 0, bH = 36, iconsOnly = false) {
   const entries = urls.map((u) => ({ url: u, platform: detectPlatform(u) }));
   const showTitle = titleText.trim().length > 0;
   const TITLE_H = 44;
@@ -72,14 +115,40 @@ function renderSocialCardSvg(urls, bg, cardRx, maxW, titleText = "", titleColor 
     );
   }
 
-  // Flow badges into rows
+  // ── Grid mode ──
+  if (gridCols >= 1) {
+    const cols   = Math.min(gridCols, entries.length);
+    const rows   = Math.ceil(entries.length / cols);
+    const innerW = maxW - CARD_PAD_X * 2;
+    // icons-only: square cells (bH × bH)
+    const cellW  = iconsOnly ? bH : (innerW - (cols - 1) * BADGE_GAP) / cols;
+    const cardW  = iconsOnly
+      ? CARD_PAD_X * 2 + cols * bH + (cols - 1) * BADGE_GAP
+      : maxW;
+    const cardH  = topOffset + rows * bH + (rows - 1) * BADGE_GAP + CARD_PAD_Y;
+
+    let inner = "";
+    entries.forEach(({ url, platform }, i) => {
+      const col  = i % cols;
+      const row  = Math.floor(i / cols);
+      const x    = CARD_PAD_X + col * (cellW + BADGE_GAP);
+      const y    = topOffset + row * (bH + BADGE_GAP);
+      inner += renderBadgeGrid(url, platform, x, y, cellW, bH, iconsOnly);
+    });
+
+    return buildSvg(cardW, cardH, cardRx, bg, hideBorder, borderColor,
+      showTitle, titleText, titleColor, centreTitle, inner);
+  }
+
+  // ── Flow mode ──
   const rows = [];
   let curRow = [];
   let curX = CARD_PAD_X;
   let maxRowW = 0;
 
   for (const entry of entries) {
-    const bw = badgeWidth(entry.platform.label);
+    // icons-only: square badge width = bH
+    const bw = iconsOnly ? bH : badgeWidth(entry.platform.label);
     const wouldEnd = curX + bw;
     if (curRow.length > 0 && wouldEnd > maxW - CARD_PAD_X) {
       rows.push(curRow);
@@ -87,7 +156,7 @@ function renderSocialCardSvg(urls, bg, cardRx, maxW, titleText = "", titleColor 
       curRow = [];
       curX = CARD_PAD_X;
     }
-    curRow.push({ entry, x: curX });
+    curRow.push({ entry, x: curX, bw });
     curX += bw + BADGE_GAP;
   }
   if (curRow.length > 0) {
@@ -97,26 +166,35 @@ function renderSocialCardSvg(urls, bg, cardRx, maxW, titleText = "", titleColor 
 
   const rowCount = rows.length;
   const cardW = Math.min(maxW, maxRowW + CARD_PAD_X);
-  const cardH = topOffset + rowCount * BADGE_H + (rowCount - 1) * BADGE_GAP + CARD_PAD_Y;
+  const cardH = topOffset + rowCount * bH + (rowCount - 1) * BADGE_GAP + CARD_PAD_Y;
 
   let inner = "";
   rows.forEach((row, ri) => {
-    const rowY = topOffset + ri * (BADGE_H + BADGE_GAP);
-    for (const { entry: { url, platform }, x } of row) {
-      const bw    = badgeWidth(platform.label);
-      const iconY = rowY + (BADGE_H - ICON_SZ) / 2;
-      const textX = x + PAD_L + ICON_SZ + GAP_TI;
-      const textY = rowY + BADGE_H / 2;
-      inner +=
-        `<a href="${escapeXml(url)}" target="_blank" rel="noopener noreferrer">` +
-        `<rect x="${x}" y="${rowY}" width="${bw}" height="${BADGE_H}" rx="${BADGE_RX}" fill="${platform.color}"/>` +
-        `<g transform="translate(${x + PAD_L} ${iconY}) scale(${ICON_SCALE})" fill="${platform.textColor}">` +
-        platform.iconPath +
-        `</g>` +
-        `<text x="${textX}" y="${textY}" dominant-baseline="middle" ` +
-        `font-family="Inter,Segoe UI,sans-serif" font-size="${FONT_SZ}" font-weight="700" ` +
-        `fill="${platform.textColor}" letter-spacing=".02em">${escapeXml(platform.label)}</text>` +
-        `</a>`;
+    const rowY = topOffset + ri * (bH + BADGE_GAP);
+    for (const { entry: { url, platform }, x, bw } of row) {
+      const iconY = rowY + (bH - ICON_SZ) / 2;
+
+      if (iconsOnly) {
+        const iconTx = x + (bw - ICON_SZ) / 2;
+        inner +=
+          `<a href="${escapeXml(url)}" target="_blank" rel="noopener noreferrer">` +
+          `<rect x="${x}" y="${rowY}" width="${bw}" height="${bH}" rx="${BADGE_RX}" fill="${platform.color}"/>` +
+          `<g transform="translate(${iconTx} ${iconY}) scale(${ICON_SCALE})" fill="${platform.textColor}">` +
+          platform.iconPath + `</g>` +
+          `</a>`;
+      } else {
+        const textX = x + PAD_L + ICON_SZ + GAP_TI;
+        const textY = rowY + bH / 2;
+        inner +=
+          `<a href="${escapeXml(url)}" target="_blank" rel="noopener noreferrer">` +
+          `<rect x="${x}" y="${rowY}" width="${bw}" height="${bH}" rx="${BADGE_RX}" fill="${platform.color}"/>` +
+          `<g transform="translate(${x + PAD_L} ${iconY}) scale(${ICON_SCALE})" fill="${platform.textColor}">` +
+          platform.iconPath + `</g>` +
+          `<text x="${textX}" y="${textY}" dominant-baseline="middle" ` +
+          `font-family="Inter,Segoe UI,sans-serif" font-size="${FONT_SZ}" font-weight="700" ` +
+          `fill="${platform.textColor}" letter-spacing=".02em">${escapeXml(platform.label)}</text>` +
+          `</a>`;
+      }
     }
   });
 
@@ -158,8 +236,13 @@ export default function handler(req, res) {
   const centreTitle = url.searchParams.get("centreTitle") === "1";
   const hideBorder  = url.searchParams.get("hideBorder")  === "1";
   const borderColor = url.searchParams.get("borderColor") ?? "#30363d";
+  const colsParam   = url.searchParams.get("cols");
+  const gridCols    = colsParam ? Math.max(1, Number(colsParam)) : 0;
+  const bhParam     = url.searchParams.get("bh");
+  const badgeHeight = bhParam ? Math.max(32, Math.min(56, Number(bhParam))) : 36;
+  const iconsOnly   = url.searchParams.get("iconsOnly") === "1";
 
-  const svg = renderSocialCardSvg(links, bg, radius, maxW, title, titleColor, centreTitle, hideBorder, borderColor);
+  const svg = renderSocialCardSvg(links, bg, radius, maxW, title, titleColor, centreTitle, hideBorder, borderColor, gridCols, badgeHeight, iconsOnly);
 
   res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=600");

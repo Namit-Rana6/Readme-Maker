@@ -21,7 +21,7 @@ export const PLATFORMS = [
   },
   {
     key: "email", label: "Email", color: "#EA4335", textColor: "#ffffff",
-    match: /mailto:|gmail\.com|mail\./i,
+    match: /mailto:|@|gmail\.com|outlook\.|hotmail\.|yahoo\.|rediff\.|proton\.|icloud\.|zoho\.|mail\./i,
     iconPath: `<path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/>`,
   },
   {
@@ -61,7 +61,8 @@ export const PLATFORMS = [
  * @param {string} url
  */
 export function detectPlatform(url) {
-  if (url.startsWith("mailto:")) {
+  // mailto: and bare email addresses (contain @) → Email
+  if (url.startsWith("mailto:") || /^[^/]+@[^/]+\.[^/]+$/.test(url.trim())) {
     return PLATFORMS.find((p) => p.key === "email") ?? genericLink();
   }
   for (const p of PLATFORMS) {
