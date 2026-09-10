@@ -482,19 +482,411 @@
       .site-footer a:hover { color: var(--text); }
 
       /* ── Home page ───────────────────────────────────────────────────── */
-      .home-page { display: none; min-height: 80vh; align-content: center; justify-items: center; padding: 80px 0; text-align: center; }
-      .home-page.is-active { display: grid; }
-      .home-kicker { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent2); margin-bottom: 18px; }
-      .home-coming { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 28px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; color: var(--subtle); font-size: 13px; }
-      .home-coming span { color: var(--orange); }
-      .home-page h1 { max-width: 680px; font-size: clamp(36px, 7vw, 68px); font-weight: 700; letter-spacing: -.04em; line-height: 1.05; color: var(--white); margin-bottom: 18px; }
-      .home-page > p { max-width: 500px; color: var(--muted); font-size: 16px; line-height: 1.7; margin-bottom: 32px; }
-      .home-actions { display: flex; gap: 10px; }
-      .home-actions a { border-radius: 9px; padding: 12px 20px; font-size: 14px; font-weight: 700; text-decoration: none; color: #fff; background: var(--accent); transition: opacity .12s; }
-      .home-actions a:hover { opacity: .88; }
-      .home-actions a.secondary { background: var(--surface2); border: 1px solid var(--line2); color: var(--text); }
+      .home-page { display: none; }
+      .home-page.is-active { display: block; }
       .builder-page { display: none; }
       .builder-page.is-active { display: block; }
+
+      /* home nav */
+      .home-nav-wrap {
+        position: sticky; top: 0; z-index: 100;
+        background: rgba(12,12,14,.82);
+        backdrop-filter: blur(18px) saturate(1.6);
+        -webkit-backdrop-filter: blur(18px) saturate(1.6);
+        border-bottom: 1px solid var(--line);
+        /* break out of .shell max-width container */
+        margin-left: calc(-1 * (100vw - min(1200px, calc(100% + 48px))) / 2);
+        margin-right: calc(-1 * (100vw - min(1200px, calc(100% + 48px))) / 2);
+        width: 100vw;
+      }
+      .home-nav {
+        width: min(1200px, calc(100% - 48px));
+        margin: 0 auto;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 0;
+        gap: 24px;
+      }
+      .home-nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+      .home-nav-brand-mark {
+        width: 32px; height: 32px; border-radius: 8px;
+        background: linear-gradient(135deg, #f97316, #dc2626);
+        display: flex; align-items: flex-end; justify-content: center;
+        gap: 2.5px; padding: 6px 7px 5px;
+        box-shadow: 0 3px 10px rgba(249,115,22,.4); flex-shrink: 0;
+      }
+      .home-nav-brand-mark span { display: block; width: 3px; border-radius: 2px; background: rgba(255,255,255,.95); }
+      .home-nav-brand-mark span:nth-child(1) { height: 6px; }
+      .home-nav-brand-mark span:nth-child(2) { height: 11px; }
+      .home-nav-brand-mark span:nth-child(3) { height: 16px; }
+      .home-nav-name { font-size: 14px; font-weight: 700; color: var(--white); letter-spacing: -.02em; }
+
+      /* center nav links */
+      .home-nav-center {
+        display: flex; align-items: center; gap: 2px;
+        background: var(--surface); border: 1px solid var(--line2);
+        border-radius: 10px; padding: 4px;
+      }
+      .home-nav-center a {
+        font-size: 13px; font-weight: 500; color: var(--muted);
+        text-decoration: none; padding: 6px 14px; border-radius: 7px;
+        border: 1px solid transparent;
+        transition: color .15s, background .15s;
+        white-space: nowrap;
+      }
+      .home-nav-center a:hover { color: var(--text); background: var(--surface2); }
+
+      /* right actions */
+      .home-nav-links { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+      .home-nav-links a {
+        font-size: 13px; font-weight: 500; color: var(--muted);
+        text-decoration: none; padding: 7px 14px; border-radius: 8px;
+        border: 1px solid transparent; transition: color .15s, background .15s, border-color .15s;
+        white-space: nowrap;
+      }
+      .home-nav-links a:hover { color: var(--text); background: var(--surface2); }
+      .home-nav-links a.nav-cta {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--white); background: var(--accent);
+        border-color: var(--accent);
+        font-weight: 700;
+        box-shadow: 0 4px 14px rgba(124,106,247,.35);
+        padding: 8px 16px;
+      }
+      .home-nav-links a.nav-cta:hover { opacity: .88; }
+      .home-nav-links a.nav-outline {
+        border-color: var(--line2); color: var(--subtle); background: transparent;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .home-nav-links a.nav-outline:hover { color: var(--text); background: var(--surface2); border-color: var(--line2); }
+
+      @media (max-width: 800px) {
+        .home-nav-center { display: none; }
+      }
+      @media (max-width: 600px) {
+        .home-nav-links a:not(.nav-cta) { display: none; }
+        .home-nav { width: calc(100% - 28px); }
+      }
+
+      /* hero */
+      .lp-hero {
+        padding: 80px 0 72px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 48px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+      }
+      .lp-hero-left {}
+      .lp-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        border: 1px solid rgba(124,106,247,.3);
+        background: rgba(124,106,247,.08);
+        border-radius: 999px; padding: 5px 14px 5px 7px;
+        margin-bottom: 24px;
+      }
+      .lp-badge-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--accent2); box-shadow: 0 0 8px var(--accent2); flex-shrink: 0;
+      }
+      .lp-badge-text { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent2); }
+      .lp-hero h1 {
+        font-size: clamp(36px, 5vw, 58px);
+        font-weight: 700; letter-spacing: -.04em;
+        line-height: 1.08; color: var(--white); margin-bottom: 16px;
+      }
+      .lp-hero h1 em { font-style: normal; color: var(--accent2); }
+      .lp-hero-desc {
+        font-size: 15px; color: var(--muted); line-height: 1.7;
+        max-width: 440px; margin-bottom: 32px;
+      }
+      .lp-hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .lp-btn-primary {
+        display: inline-flex; align-items: center; gap: 7px;
+        border: 0; border-radius: 10px; padding: 13px 22px;
+        font-size: 14px; font-weight: 700; text-decoration: none; color: #fff;
+        background: var(--accent); box-shadow: 0 6px 20px rgba(124,106,247,.4);
+        transition: opacity .12s, transform .12s;
+      }
+      .lp-btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+      .lp-btn-secondary {
+        display: inline-flex; align-items: center; gap: 7px;
+        border: 1px solid var(--line2); border-radius: 10px; padding: 12px 20px;
+        font-size: 14px; font-weight: 600; text-decoration: none; color: var(--text);
+        background: var(--surface); transition: border-color .15s, background .15s;
+      }
+      .lp-btn-secondary:hover { border-color: var(--accent); background: rgba(124,106,247,.08); }
+      .lp-hero-stats { display: flex; gap: 28px; margin-top: 36px; }
+      .lp-hero-stat-num { font-size: 22px; font-weight: 700; color: var(--white); letter-spacing: -.03em; }
+      .lp-hero-stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+      /* hero preview mockup */
+      .lp-hero-right {}
+      .lp-mockup {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px; overflow: hidden;
+        box-shadow: 0 24px 64px rgba(0,0,0,.5);
+      }
+      .lp-mockup-bar {
+        display: flex; align-items: center; gap: 6px;
+        padding: 10px 14px; background: var(--bg2);
+        border-bottom: 1px solid var(--line);
+      }
+      .lp-mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+      .lp-mockup-dot:nth-child(1) { background: #f87171; }
+      .lp-mockup-dot:nth-child(2) { background: #fbbf24; }
+      .lp-mockup-dot:nth-child(3) { background: #34d399; }
+      .lp-mockup-url {
+        flex: 1; margin-left: 6px; padding: 4px 10px;
+        background: var(--surface2); border-radius: 5px;
+        font-size: 11px; color: var(--muted); font-family: monospace;
+      }
+      .lp-mockup-body { padding: 28px 24px; background: #080810; }
+      .lp-mockup-body img, .lp-mockup-body svg { display: block; max-width: 100%; border-radius: 6px; }
+      .lp-mockup-caption {
+        display: flex; align-items: center; gap: 8px;
+        padding: 12px 14px 10px;
+        border-top: 1px solid var(--line);
+        font-size: 11px; color: var(--muted);
+      }
+      .lp-mockup-caption::before {
+        content: ""; width: 6px; height: 6px; border-radius: 50%;
+        background: var(--green); box-shadow: 0 0 6px var(--green); flex-shrink: 0;
+      }
+
+      /* section layout */
+      .lp-section { padding: 72px 0; border-bottom: 1px solid var(--line); }
+      .lp-section:last-of-type { border-bottom: none; }
+      .lp-section-eyebrow {
+        font-size: 10px; font-weight: 700; letter-spacing: .12em;
+        text-transform: uppercase; color: var(--accent2); margin-bottom: 10px;
+      }
+      .lp-section-title {
+        font-size: clamp(22px, 3vw, 32px); font-weight: 700;
+        letter-spacing: -.03em; color: var(--white); margin-bottom: 10px;
+      }
+      .lp-section-desc { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 560px; }
+
+      /* features grid */
+      .lp-features-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 14px; margin-top: 40px;
+      }
+      .lp-feature-card {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 14px; padding: 24px;
+        transition: border-color .2s;
+      }
+      .lp-feature-card:hover { border-color: var(--line2); }
+      .lp-feature-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; margin-bottom: 14px;
+        background: var(--surface2);
+      }
+      .lp-feature-name { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+      .lp-feature-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+      /* widgets showcase */
+      .lp-widgets { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
+      .lp-widget-card {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 14px; overflow: hidden;
+      }
+      .lp-widget-card-header {
+        padding: 14px 18px; background: var(--bg2);
+        border-bottom: 1px solid var(--line);
+        display: flex; align-items: center; justify-content: space-between;
+      }
+      .lp-widget-card-title { font-size: 12px; font-weight: 700; color: var(--text); }
+      .lp-widget-tag {
+        font-size: 10px; font-weight: 700; letter-spacing: .06em;
+        text-transform: uppercase; padding: 2px 8px; border-radius: 999px;
+        color: var(--accent2); background: rgba(124,106,247,.12);
+        border: 1px solid rgba(124,106,247,.2);
+      }
+      .lp-widget-body {
+        padding: 24px; background: #080810;
+        display: flex; align-items: center; justify-content: center; min-height: 140px;
+      }
+      .lp-widget-body img { display: block; max-width: 100%; border-radius: 6px; }
+      .lp-widget-footer {
+        padding: 12px 18px; border-top: 1px solid var(--line);
+        font-size: 11px; color: var(--muted);
+      }
+
+      /* how it works */
+      .lp-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 40px; }
+      .lp-step {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 14px; padding: 28px 24px;
+        position: relative;
+      }
+      .lp-step-num {
+        width: 32px; height: 32px; border-radius: 8px;
+        background: rgba(124,106,247,.15); border: 1px solid rgba(124,106,247,.2);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; font-weight: 700; color: var(--accent2);
+        margin-bottom: 16px;
+      }
+      .lp-step-title { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+      .lp-step-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+      .lp-step-connector {
+        position: absolute; top: 44px; right: -22px;
+        color: var(--line2); font-size: 18px; z-index: 1;
+      }
+
+      /* themes strip */
+      .lp-themes { margin-top: 40px; display: flex; flex-direction: column; gap: 12px; }
+      .lp-themes-row { display: flex; gap: 8px; overflow: hidden; }
+      .lp-theme-chip {
+        flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+        border: 1px solid var(--line); border-radius: 10px;
+        padding: 10px 14px;
+        background: var(--surface);
+        transition: border-color .15s;
+      }
+      .lp-theme-chip:hover { border-color: var(--line2); }
+      .lp-theme-chip-swatches { display: flex; gap: 3px; }
+      .lp-theme-chip-swatch { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(255,255,255,.1); }
+      .lp-theme-chip-swatch:first-child { border-radius: 3px; }
+      .lp-theme-chip-name { font-size: 11px; font-weight: 600; color: var(--subtle); }
+
+      /* code snippet */
+      .lp-code-block {
+        margin-top: 28px; background: var(--surface);
+        border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+      }
+      .lp-code-block-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 16px; background: var(--bg2); border-bottom: 1px solid var(--line);
+      }
+      .lp-code-block-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+      .lp-code-block-tag {
+        font-size: 10px; color: var(--subtle); padding: 2px 8px;
+        background: var(--surface2); border-radius: 4px; border: 1px solid var(--line2);
+      }
+      .lp-code-block pre {
+        padding: 20px 20px; margin: 0; overflow-x: auto;
+        font-family: "SF Mono", Consolas, "Fira Code", monospace;
+        font-size: 12px; line-height: 1.75; color: var(--subtle);
+      }
+      .lp-code-block pre .c-purple { color: #a78bfa; }
+      .lp-code-block pre .c-green  { color: #3dd68c; }
+      .lp-code-block pre .c-orange { color: #fb923c; }
+      .lp-code-block pre .c-muted  { color: var(--muted); }
+
+      /* coming soon */
+      .lp-coming-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 12px; margin-top: 32px;
+      }
+      .lp-coming-card {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 14px; padding: 22px 20px;
+        display: flex; flex-direction: column; gap: 0;
+        transition: border-color .2s;
+      }
+      .lp-coming-card:hover { border-color: var(--line2); }
+      .lp-coming-card-top {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 14px;
+      }
+      .lp-coming-icon { font-size: 22px; }
+      .lp-coming-pill {
+        font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+        padding: 3px 9px; border-radius: 999px;
+        color: #34d399; background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.2);
+      }
+      .lp-coming-pill--planned {
+        color: var(--accent2); background: rgba(124,106,247,.1); border-color: rgba(124,106,247,.2);
+      }
+      .lp-coming-pill--idea {
+        color: var(--orange); background: rgba(249,115,22,.1); border-color: rgba(249,115,22,.2);
+      }
+      .lp-coming-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+      .lp-coming-desc { font-size: 12px; color: var(--muted); line-height: 1.6; flex: 1; }
+      .lp-coming-link {
+        display: inline-block; margin-top: 14px;
+        font-size: 12px; font-weight: 600; color: var(--accent2);
+        text-decoration: none; transition: color .15s;
+      }
+      .lp-coming-link:hover { color: var(--white); }
+
+      @media (max-width: 900px) { .lp-coming-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 600px) { .lp-coming-grid { grid-template-columns: 1fr; } }
+
+      /* contribute section */
+      .lp-contribute-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 12px; margin-top: 32px;
+      }
+      .lp-contribute-card {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 14px; padding: 22px 20px;
+        transition: border-color .2s;
+      }
+      .lp-contribute-card:hover { border-color: var(--line2); }
+      .lp-contribute-icon { font-size: 22px; margin-bottom: 12px; }
+      .lp-contribute-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+      .lp-contribute-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+      .lp-contribute-desc code {
+        font-family: "SF Mono", Consolas, "Fira Code", monospace;
+        font-size: 11px; color: var(--accent2);
+        background: rgba(124,106,247,.1); border-radius: 4px; padding: 1px 5px;
+      }
+      .lp-contribute-banner {
+        margin-top: 16px;
+        display: flex; align-items: center; justify-content: space-between; gap: 20px;
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 12px; padding: 18px 22px;
+      }
+      .lp-contribute-banner-text { display: flex; flex-direction: column; gap: 3px; }
+      .lp-contribute-banner-text strong { font-size: 13px; font-weight: 700; color: var(--white); }
+      .lp-contribute-banner-text span { font-size: 12px; color: var(--muted); }
+
+      @media (max-width: 900px) {
+        .lp-contribute-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 600px) {
+        .lp-contribute-grid { grid-template-columns: 1fr; }
+        .lp-contribute-banner { flex-direction: column; align-items: flex-start; }
+      }
+
+      /* final CTA */
+      .lp-cta-block {
+        margin-top: 72px; margin-bottom: 72px;
+        background: linear-gradient(135deg, rgba(124,106,247,.12), rgba(167,139,250,.06));
+        border: 1px solid rgba(124,106,247,.2);
+        border-radius: 20px; padding: 56px 48px;
+        text-align: center;
+      }
+      .lp-cta-block h2 { font-size: clamp(24px, 3.5vw, 38px); font-weight: 700; letter-spacing: -.03em; color: var(--white); margin-bottom: 10px; }
+      .lp-cta-block p { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+      .lp-cta-btns { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+      /* home footer */
+      .lp-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 24px 0; border-top: 1px solid var(--line);
+        font-size: 12px; color: var(--muted);
+      }
+      .lp-footer a { color: var(--subtle); text-decoration: none; }
+      .lp-footer a:hover { color: var(--text); }
+      .lp-footer-links { display: flex; gap: 16px; }
+
+      @media (max-width: 1000px) {
+        .lp-hero { grid-template-columns: 1fr; }
+        .lp-hero-right { display: none; }
+        .lp-features-grid { grid-template-columns: repeat(2, 1fr); }
+        .lp-widgets { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 700px) {
+        .lp-features-grid { grid-template-columns: 1fr; }
+        .lp-steps { grid-template-columns: 1fr; }
+        .lp-step-connector { display: none; }
+        .lp-cta-block { padding: 36px 24px; }
+      }
 
       /* ── Social links builder ────────────────────────────────────────── */
       .sl-builder { display: flex; flex-direction: column; gap: 0; }
@@ -546,15 +938,389 @@
     <main class="shell">
 
       <!-- ── Home page ── -->
-      <section class="home-page" id="home-page" aria-labelledby="home-title">
-        <p class="home-kicker">Readme Maker</p>
-        <div class="home-coming"><span>✦</span> More tools coming soon</div>
-        <h1 id="home-title">Your README,<br/>made sharper.</h1>
-        <p>Generate beautiful GitHub stats widgets and embed them in your README with a single line.</p>
-        <div class="home-actions">
-          <a href="/builder">Open builder</a>
-          <a class="secondary" href="https://github.com/Namit-Rana6/Readme-Maker">View on GitHub</a>
+      <section class="home-page" id="home-page" aria-label="Landing page">
+
+        <!-- Nav -->
+        <div class="home-nav-wrap">
+          <nav class="home-nav">
+            <a href="/" class="home-nav-brand" aria-label="Readme Maker home">
+              <span class="home-nav-brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+              <span class="home-nav-name">Readme Maker</span>
+            </a>
+            <div class="home-nav-center">
+              <a href="#features">Features</a>
+              <a href="#widgets">Widgets</a>
+              <a href="#how-it-works">How it works</a>
+              <a href="#themes">Themes</a>
+            </div>
+            <div class="home-nav-links">
+              <a href="https://github.com/Namit-Rana6/Readme-Maker" class="nav-outline">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+                GitHub
+              </a>
+              <a href="/builder" class="nav-cta">
+                Open builder
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </nav>
         </div>
+
+        <!-- Hero -->
+        <div class="lp-hero">
+          <div class="lp-hero-left">
+            <div class="lp-badge">
+              <span class="lp-badge-dot"></span>
+              <span class="lp-badge-text">Free &amp; Open Source</span>
+            </div>
+            <h1>Make your<br/><em>GitHub README</em><br/>stand out.</h1>
+            <p class="lp-hero-desc">
+              Generate beautiful stats cards and social link banners in seconds.
+              Configure in the builder, copy one line, paste into your README.
+            </p>
+            <div class="lp-hero-actions">
+              <a href="/builder" class="lp-btn-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8"/></svg>
+                Open builder
+              </a>
+              <a href="https://github.com/Namit-Rana6/Readme-Maker" class="lp-btn-secondary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+                Star on GitHub
+              </a>
+            </div>
+            <div class="lp-hero-stats">
+              <div>
+                <div class="lp-hero-stat-num">2</div>
+                <div class="lp-hero-stat-label">Widget types</div>
+              </div>
+              <div>
+                <div class="lp-hero-stat-num">9</div>
+                <div class="lp-hero-stat-label">Built-in themes</div>
+              </div>
+              <div>
+                <div class="lp-hero-stat-num">110</div>
+                <div class="lp-hero-stat-label">Automated tests</div>
+              </div>
+              <div>
+                <div class="lp-hero-stat-num">10</div>
+                <div class="lp-hero-stat-label">Social platforms</div>
+              </div>
+            </div>
+          </div>
+          <div class="lp-hero-right">
+            <div class="lp-mockup">
+              <div class="lp-mockup-bar">
+                <span class="lp-mockup-dot"></span>
+                <span class="lp-mockup-dot"></span>
+                <span class="lp-mockup-dot"></span>
+                <span class="lp-mockup-url">readme-maker-ashen.vercel.app/builder</span>
+              </div>
+              <div class="lp-mockup-body">
+                <img
+                  src="https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=midnight&radius=8&stats=followers,commits,pullRequests,issues,contributions,repositories"
+                  alt="GitHub stats card preview"
+                  width="460"
+                  loading="lazy"
+                />
+              </div>
+              <div class="lp-mockup-caption">Live SVG — updates with your real GitHub data</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features -->
+        <div class="lp-section" id="features">
+          <p class="lp-section-eyebrow">Features</p>
+          <h2 class="lp-section-title">Everything you need for a sharp README</h2>
+          <p class="lp-section-desc">Every setting you change in the builder is encoded into the URL. The API produces exactly what you saw in the preview — no surprises.</p>
+          <div class="lp-features-grid">
+            <div class="lp-feature-card">
+              <div class="lp-feature-icon">📊</div>
+              <div class="lp-feature-name">GitHub Stats Card</div>
+              <div class="lp-feature-desc">11 selectable metrics. Row list or 3×N grid layout. Customise title, icons, border, and more.</div>
+            </div>
+            <div class="lp-feature-card">
+              <div class="lp-feature-icon">🔗</div>
+              <div class="lp-feature-name">Social Links Card</div>
+              <div class="lp-feature-desc">Add any profile URL and the card auto-detects the platform. Flow or grid layout. Drag to reorder.</div>
+            </div>
+            <div class="lp-feature-card">
+              <div class="lp-feature-icon">🎨</div>
+              <div class="lp-feature-name">9 Themes + Custom</div>
+              <div class="lp-feature-desc">Pick from 9 polished presets or create your own with 6 independent color slots.</div>
+            </div>
+            <div class="lp-feature-card">
+              <div class="lp-feature-icon">🔵</div>
+              <div class="lp-feature-name">Icons Only Mode</div>
+              <div class="lp-feature-desc">Compact square icon badges with no label text — great for minimal profiles.</div>
+            </div>
+            <div class="lp-feature-card">
+              <div class="lp-feature-icon">⚡</div>
+              <div class="lp-feature-name">Serverless — zero config</div>
+              <div class="lp-feature-desc">Runs on Vercel. No backend to manage. Embed a URL and it just works.</div>
+            </div>
+            <div class="lp-feature-card">
+              <div class="lp-feature-icon">🔒</div>
+              <div class="lp-feature-name">Single URL contract</div>
+              <div class="lp-feature-desc">Preview and embed are generated from the exact same URL. What you configure is what your README shows.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Widgets showcase -->
+        <div class="lp-section" id="widgets">
+          <p class="lp-section-eyebrow">Widgets</p>
+          <h2 class="lp-section-title">Two widgets, endless configurations</h2>
+          <p class="lp-section-desc">Each widget is a plain SVG served over HTTP — works in any Markdown renderer, including GitHub READMEs.</p>
+          <div class="lp-widgets">
+            <div class="lp-widget-card">
+              <div class="lp-widget-card-header">
+                <span class="lp-widget-card-title">Stats Card — Standard</span>
+                <span class="lp-widget-tag">SVG</span>
+              </div>
+              <div class="lp-widget-body">
+                <img
+                  src="https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=default&radius=6"
+                  alt="GitHub Stats Card"
+                  loading="lazy"
+                />
+              </div>
+              <div class="lp-widget-footer">11 metrics · 9 themes · custom title · show/hide icons, border, title</div>
+            </div>
+            <div class="lp-widget-card">
+              <div class="lp-widget-card-header">
+                <span class="lp-widget-card-title">Stats Card — Grid layout</span>
+                <span class="lp-widget-tag">SVG</span>
+              </div>
+              <div class="lp-widget-body">
+                <img
+                  src="https://readme-maker-ashen.vercel.app/api/stats?username=Namit-Rana6&theme=midnight&radius=8&layout=hidden&stats=followers,commits,pullRequests,issues,contributions,repositories"
+                  alt="GitHub Stats Grid Card"
+                  loading="lazy"
+                />
+              </div>
+              <div class="lp-widget-footer">3×1 / 3×2 / 3×3 auto-sized by stat count</div>
+            </div>
+            <div class="lp-widget-card">
+              <div class="lp-widget-card-header">
+                <span class="lp-widget-card-title">Social Links — Flow</span>
+                <span class="lp-widget-tag">No token</span>
+              </div>
+              <div class="lp-widget-body">
+                <img
+                  src="https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&link=https://leetcode.com/namit&link=https://medium.com/@namit&bg=%230d1117&radius=10&title=Connect+with+me&centreTitle=1"
+                  alt="Social Links Card"
+                  loading="lazy"
+                />
+              </div>
+              <div class="lp-widget-footer">10 platforms · auto-detected · no GitHub token required</div>
+            </div>
+            <div class="lp-widget-card">
+              <div class="lp-widget-card-header">
+                <span class="lp-widget-card-title">Social Links — Grid + Icons only</span>
+                <span class="lp-widget-tag">No token</span>
+              </div>
+              <div class="lp-widget-body">
+                <img
+                  src="https://readme-maker-ashen.vercel.app/api/social-card?link=https://github.com/Namit-Rana6&link=https://linkedin.com/in/namit-rana&link=https://leetcode.com/namit&link=https://kaggle.com/namit&link=https://medium.com/@namit&link=https://stackoverflow.com/users/namit&bg=%230d1117&radius=10&cols=3&maxw=420&bh=44&iconsOnly=1"
+                  alt="Social Links Grid Icons Only"
+                  loading="lazy"
+                />
+              </div>
+              <div class="lp-widget-footer">Grid mode · square icon badges · drag-to-reorder in builder</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coming soon widgets -->
+        <div class="lp-section">
+          <p class="lp-section-eyebrow">Coming soon</p>
+          <h2 class="lp-section-title">More widgets on the way</h2>
+          <p class="lp-section-desc">The builder is growing. These are next in line — follow the repo to get notified when they drop.</p>
+          <div class="lp-coming-grid">
+
+            <div class="lp-coming-card">
+              <div class="lp-coming-card-top">
+                <span class="lp-coming-icon">📈</span>
+                <span class="lp-coming-pill">In progress</span>
+              </div>
+              <div class="lp-coming-title">Top Languages Card</div>
+              <div class="lp-coming-desc">Bar chart of your most used languages across all repos. Filterable, sortable, themed.</div>
+            </div>
+
+            <div class="lp-coming-card">
+              <div class="lp-coming-card-top">
+                <span class="lp-coming-icon">🔥</span>
+                <span class="lp-coming-pill lp-coming-pill--planned">Planned</span>
+              </div>
+              <div class="lp-coming-title">Streak Counter</div>
+              <div class="lp-coming-desc">Current streak, longest streak, and total contributions — the card everyone puts in their README.</div>
+            </div>
+
+            <div class="lp-coming-card">
+              <div class="lp-coming-card-top">
+                <span class="lp-coming-icon">🏆</span>
+                <span class="lp-coming-pill lp-coming-pill--planned">Planned</span>
+              </div>
+              <div class="lp-coming-title">Achievements Card</div>
+              <div class="lp-coming-desc">GitHub trophies and milestones — stars earned, PRs merged, issues closed — displayed as badges.</div>
+            </div>
+
+            <div class="lp-coming-card">
+              <div class="lp-coming-card-top">
+                <span class="lp-coming-icon">📅</span>
+                <span class="lp-coming-pill lp-coming-pill--planned">Planned</span>
+              </div>
+              <div class="lp-coming-title">Contribution Heatmap</div>
+              <div class="lp-coming-desc">52-week activity grid styled to match your theme. The classic GitHub graph, but yours to embed anywhere.</div>
+            </div>
+
+            <div class="lp-coming-card">
+              <div class="lp-coming-card-top">
+                <span class="lp-coming-icon">⭐</span>
+                <span class="lp-coming-pill lp-coming-pill--planned">Planned</span>
+              </div>
+              <div class="lp-coming-title">Pinned Repos Card</div>
+              <div class="lp-coming-desc">Showcase your best projects with stars, forks, language, and description — all in one card.</div>
+            </div>
+
+            <div class="lp-coming-card">
+              <div class="lp-coming-card-top">
+                <span class="lp-coming-icon">✨</span>
+                <span class="lp-coming-pill lp-coming-pill--idea">Idea</span>
+              </div>
+              <div class="lp-coming-title">Got an idea?</div>
+              <div class="lp-coming-desc">Have a widget in mind that's not listed here? Open an issue and let's build it together.</div>
+              <a href="https://github.com/Namit-Rana6/Readme-Maker/issues" class="lp-coming-link">Suggest a widget →</a>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- How it works -->
+        <div class="lp-section" id="how-it-works">
+          <p class="lp-section-eyebrow">How it works</p>
+          <h2 class="lp-section-title">Three steps, one URL</h2>
+          <p class="lp-section-desc">No accounts, no sign-in. Just configure, copy, and paste.</p>
+          <div class="lp-steps">
+            <div class="lp-step">
+              <div class="lp-step-num">1</div>
+              <div class="lp-step-title">Open the builder</div>
+              <div class="lp-step-desc">Enter your GitHub username, pick a theme, select your stats, and tweak every option in real time.</div>
+              <span class="lp-step-connector" aria-hidden="true">→</span>
+            </div>
+            <div class="lp-step">
+              <div class="lp-step-num">2</div>
+              <div class="lp-step-title">Copy the embed</div>
+              <div class="lp-step-desc">Grab the Markdown, HTML, or raw URL from the output panel. The URL encodes your entire configuration.</div>
+              <span class="lp-step-connector" aria-hidden="true">→</span>
+            </div>
+            <div class="lp-step">
+              <div class="lp-step-num">3</div>
+              <div class="lp-step-title">Paste into your README</div>
+              <div class="lp-step-desc">Drop it into your GitHub profile README. The SVG renders live with your real data, cached for 5 minutes.</div>
+            </div>
+          </div>
+
+          <div class="lp-code-block">
+            <div class="lp-code-block-header">
+              <span class="lp-code-block-label">README.md</span>
+              <span class="lp-code-block-tag">Markdown</span>
+            </div>
+            <pre><span class="c-muted"><!-- Stats card --></span>
+<span class="c-purple">![GitHub Stats]</span><span class="c-green">(https://readme-maker-ashen.vercel.app/api/stats?</span><span class="c-orange">username=yourname</span><span class="c-green">&amp;theme=midnight&amp;radius=8)</span>
+
+<span class="c-muted"><!-- Social links --></span>
+<span class="c-purple">![My Links]</span><span class="c-green">(https://readme-maker-ashen.vercel.app/api/social-card?</span><span class="c-orange">link=https://github.com/yourname</span><span class="c-green">&amp;title=Connect+with+me&amp;centreTitle=1)</span></pre>
+          </div>
+        </div>
+
+        <!-- Themes -->
+        <div class="lp-section" id="themes">
+          <p class="lp-section-eyebrow">Themes</p>
+          <h2 class="lp-section-title">9 built-in themes</h2>
+          <p class="lp-section-desc">Pick from 9 polished presets or build your own in the builder — every color slot (background, border, title, text, value, accent) is independently configurable. Custom themes are encoded directly into the embed URL, so nothing is saved server-side.</p>
+          <div class="lp-themes">
+            <div class="lp-themes-row">
+              <div class="lp-theme-chip"><div class="lp-theme-chip-swatches"><span class="lp-theme-chip-swatch" style="background:#0d1117"></span><span class="lp-theme-chip-swatch" style="background:#30363d"></span><span class="lp-theme-chip-swatch" style="background:#a371f7"></span><span class="lp-theme-chip-swatch" style="background:#e6edf3"></span></div><span class="lp-theme-chip-name">default</span></div>
+              <div class="lp-theme-chip"><div class="lp-theme-chip-swatches"><span class="lp-theme-chip-swatch" style="background:#0a192f"></span><span class="lp-theme-chip-swatch" style="background:#1d3461"></span><span class="lp-theme-chip-swatch" style="background:#64b5f6"></span><span class="lp-theme-chip-swatch" style="background:#cdd8f6"></span></div><span class="lp-theme-chip-name">ocean</span></div>
+              <div class="lp-theme-chip"><div class="lp-theme-chip-swatches"><span class="lp-theme-chip-swatch" style="background:#1a0a00"></span><span class="lp-theme-chip-swatch" style="background:#3d1800"></span><span class="lp-theme-chip-swatch" style="background:#ff7043"></span><span class="lp-theme-chip-swatch" style="background:#ffe0d0"></span></div><span class="lp-theme-chip-name">sunset</span></div>
+              <div class="lp-theme-chip"><div class="lp-theme-chip-swatches"><span class="lp-theme-chip-swatch" style="background:#0d0d0d"></span><span class="lp-theme-chip-swatch" style="background:#1a0030"></span><span class="lp-theme-chip-swatch" style="background:#bf00ff"></span><span class="lp-theme-chip-swatch" style="background:#e0ffe0"></span></div><span class="lp-theme-chip-name">cyberpunk</span></div>
+              <div class="lp-theme-chip"><div class="lp-theme-chip-swatches"><span class="lp-theme-chip-swatch" style="background:#0a0a1a"></span><span class="lp-theme-chip-swatch" style="background:#1a1a3e"></span><span class="lp-theme-chip-swatch" style="background:#7c83fd"></span><span class="lp-theme-chip-swatch" style="background:#d0d0ff"></span></div><span class="lp-theme-chip-name">midnight</span></div>
+            </div>
+            <div class="lp-themes-row">
+              <div class="lp-theme-chip"><div class="lp-theme-chip-swatches"><span class="lp-theme-chip-swatch" style="background:#1a1b26"></span><span class="lp-theme-chip-swatch" style="background:#292e42"></span><span class="lp-theme-chip-swatch" style="background:#7aa2f7"></span><span class="lp-theme-chip-swatch" style="background:#c0caf5"></span></div><span class="lp-theme-chip-name">tokyoNight</span></div>
+              <div class="lp-theme-chip"><div class="lp-theme-chip-swatches"><span class="lp-theme-chip-swatch" style="background:#0a1f0a"></span><span class="lp-theme-chip-swatch" style="background:#1a3a1a"></span><span class="lp-theme-chip-swatch" style="background:#4caf50"></span><span class="lp-theme-chip-swatch" style="background:#d0f0d0"></span></div><span class="lp-theme-chip-name">emerald</span></div>
+              <div class="lp-theme-chip"><div class="lp-theme-chip-swatches"><span class="lp-theme-chip-swatch" style="background:#1a0a00"></span><span class="lp-theme-chip-swatch" style="background:#3d2000"></span><span class="lp-theme-chip-swatch" style="background:#ff9800"></span><span class="lp-theme-chip-swatch" style="background:#fff8e1"></span></div><span class="lp-theme-chip-name">sunsetGlow</span></div>
+              <div class="lp-theme-chip"><div class="lp-theme-chip-swatches"><span class="lp-theme-chip-swatch" style="background:#111111"></span><span class="lp-theme-chip-swatch" style="background:#222222"></span><span class="lp-theme-chip-swatch" style="background:#ffffff"></span><span class="lp-theme-chip-swatch" style="background:#cccccc"></span></div><span class="lp-theme-chip-name">dark</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contribute -->
+        <div class="lp-section">
+          <p class="lp-section-eyebrow">Open Source</p>
+          <h2 class="lp-section-title">Built in the open — contributions welcome</h2>
+          <p class="lp-section-desc">Readme Maker is fully open source. Whether it's a new theme, a platform badge, a bug fix, or just a ⭐ star — every bit helps.</p>
+          <div class="lp-contribute-grid">
+            <div class="lp-contribute-card">
+              <div class="lp-contribute-icon">🎨</div>
+              <div class="lp-contribute-title">Add a theme</div>
+              <div class="lp-contribute-desc">Drop a new entry into <code>src/core/themes.js</code> with 6 hex values and it automatically appears in the builder and as a URL param.</div>
+            </div>
+            <div class="lp-contribute-card">
+              <div class="lp-contribute-icon">🔗</div>
+              <div class="lp-contribute-title">Add a platform</div>
+              <div class="lp-contribute-desc">Add a new entry to <code>src/widgets/social-links/platforms.js</code> with a match pattern, color, and SVG icon path.</div>
+            </div>
+            <div class="lp-contribute-card">
+              <div class="lp-contribute-icon">📊</div>
+              <div class="lp-contribute-title">Add a metric</div>
+              <div class="lp-contribute-desc">Extend <code>stat-definitions.js</code> and the GitHub GraphQL query to surface a new stat in the stats card.</div>
+            </div>
+            <div class="lp-contribute-card">
+              <div class="lp-contribute-icon">🐛</div>
+              <div class="lp-contribute-title">Report a bug</div>
+              <div class="lp-contribute-desc">Found something broken? Open an issue on GitHub with steps to reproduce and we'll get it sorted.</div>
+            </div>
+          </div>
+          <div class="lp-contribute-banner">
+            <div class="lp-contribute-banner-text">
+              <strong>Ready to contribute?</strong>
+              <span>Fork, branch, build, PR. The repo has a full test suite and a local dev server to make it easy.</span>
+            </div>
+            <a href="https://github.com/Namit-Rana6/Readme-Maker" class="lp-btn-secondary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Final CTA -->
+        <div class="lp-cta-block">
+          <h2>Your README is one click away.</h2>
+          <p>Free, open source, and ready to use. No account required.</p>
+          <div class="lp-cta-btns">
+            <a href="/builder" class="lp-btn-primary">
+              Open the builder →
+            </a>
+            <a href="https://github.com/Namit-Rana6/Readme-Maker" class="lp-btn-secondary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+              View source
+            </a>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="lp-footer">
+          <p>Built with ❤️ by <a href="https://github.com/Namit-Rana6">Namit Rana</a></p>
+          <div class="lp-footer-links">
+            <a href="/builder">Builder</a>
+            <a href="https://github.com/Namit-Rana6/Readme-Maker">GitHub</a>
+            <a href="https://github.com/Namit-Rana6/Readme-Maker/issues">Issues</a>
+          </div>
+        </footer>
+
       </section>
 
       <!-- ── Builder page ── -->
@@ -800,5 +1566,6 @@
       document.getElementById("builder-page")?.classList.toggle("is-active", window.location.pathname === "/builder");
     </script>
     <script type="module" src="./src/index.ts"></script>
+    <script defer src="/_vercel/insights/script.js"></script>
   </body>
 </html>
