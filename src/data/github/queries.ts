@@ -27,6 +27,15 @@ export const GITHUB_STATS_QUERY = `
         totalCount
         nodes {
           stargazerCount
+          languages(first: 10, orderBy: { field: SIZE, direction: DESC }) {
+            edges {
+              size
+              node {
+                name
+                color
+              }
+            }
+          }
         }
       }
 

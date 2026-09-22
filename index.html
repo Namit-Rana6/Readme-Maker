@@ -888,6 +888,37 @@
         .lp-cta-block { padding: 36px 24px; }
       }
 
+      /* ── Languages layout grid ──────────────────────────────────────── */
+      .lang-layout-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        margin-bottom: 4px;
+      }
+      .lang-layout-btn {
+        border: 1px solid var(--line2);
+        border-radius: 7px;
+        padding: 7px 6px;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        background: transparent;
+        cursor: pointer;
+        text-align: center;
+        transition: color .12s, background .12s, border-color .12s;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .lang-layout-btn:hover:not(.active) { color: var(--subtle); background: var(--surface2); }
+      .lang-layout-btn.active {
+        color: var(--white);
+        background: var(--surface2);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px var(--accent) inset;
+      }
+
       /* ── Social links builder ────────────────────────────────────────── */
       .sl-builder { display: flex; flex-direction: column; gap: 0; }
       .sl-section { padding: 18px 22px; border-bottom: 1px solid var(--line); }
@@ -1377,6 +1408,96 @@
 
               <!-- Social links builder mount point (shown when badge tab active) -->
               <div id="social-links-panel" style="display:none;"></div>
+
+              <!-- Languages panel (shown when languages tab active) -->
+              <div id="languages-panel" style="display:none;">
+
+                <!-- Username -->
+                <div class="form-section">
+                  <div class="section-title">GitHub username</div>
+                  <div class="field">
+                    <div class="input-row">
+                      <input id="lang-username" type="text" value="Namit-Rana6" placeholder="e.g. torvalds" autocomplete="off" spellcheck="false"/>
+                      <button type="button" class="btn-load" id="lang-load-btn">Load</button>
+                    </div>
+                    <div id="lang-status-msg" class="status">Enter a username and hit Load</div>
+                  </div>
+                </div>
+
+                <!-- Custom title + Theme -->
+                <div class="form-section">
+                  <div class="field">
+                    <label class="field-label" for="lang-custom-title">Custom title <span>(optional)</span></label>
+                    <input id="lang-custom-title" type="text" placeholder="e.g. My Languages"/>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Theme</label>
+                    <div class="theme-control">
+                      <details class="theme-picker" id="lang-theme-picker">
+                        <summary class="theme-picker-trigger" id="lang-theme-picker-trigger">Default</summary>
+                        <div class="theme-menu" id="lang-theme-menu">
+                          <details class="custom-theme">
+                            <summary>Create custom theme</summary>
+                            <div class="custom-colors">
+                              <label class="custom-color">Background<input type="color" data-lang-custom-color="background" value="#0d1117"/></label>
+                              <label class="custom-color">Border<input type="color" data-lang-custom-color="border" value="#30363d"/></label>
+                              <label class="custom-color">Title<input type="color" data-lang-custom-color="title" value="#a371f7"/></label>
+                              <label class="custom-color">Text<input type="color" data-lang-custom-color="text" value="#e6edf3"/></label>
+                              <label class="custom-color">Value<input type="color" data-lang-custom-color="value" value="#ffffff"/></label>
+                              <label class="custom-color">Accent<input type="color" data-lang-custom-color="accent" value="#58a6ff"/></label>
+                            </div>
+                            <button type="button" class="custom-theme-apply" id="lang-apply-custom-theme">Apply theme</button>
+                          </details>
+                          <div id="lang-theme-options"></div>
+                        </div>
+                      </details>
+                      <div class="palette-preview" aria-label="Current languages theme palette">
+                        <span class="palette-swatch" data-lang-palette-color="background"></span>
+                        <span class="palette-swatch" data-lang-palette-color="border"></span>
+                        <span class="palette-swatch" data-lang-palette-color="title"></span>
+                        <span class="palette-swatch" data-lang-palette-color="text"></span>
+                        <span class="palette-swatch" data-lang-palette-color="value"></span>
+                        <span class="palette-swatch" data-lang-palette-color="accent"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Layout -->
+                <div class="form-section">
+                  <div class="section-title">Layout</div>
+                  <div class="lang-layout-grid">
+                    <button type="button" class="lang-layout-btn active" data-lang-layout="bar">Bar</button>
+                    <button type="button" class="lang-layout-btn" data-lang-layout="stacked">Stacked</button>
+                    <button type="button" class="lang-layout-btn" data-lang-layout="compact">Compact</button>
+                    <button type="button" class="lang-layout-btn" data-lang-layout="donut">Donut</button>
+                    <button type="button" class="lang-layout-btn" data-lang-layout="donut-vertical">Donut Vertical</button>
+                    <button type="button" class="lang-layout-btn" data-lang-layout="horizontal-list">Horizontal List</button>
+                    <button type="button" class="lang-layout-btn" data-lang-layout="vertical-list">Vertical List</button>
+                    <button type="button" class="lang-layout-btn" data-lang-layout="grid">Grid</button>
+                    <button type="button" class="lang-layout-btn" data-lang-layout="treemap">Treemap</button>
+                    <button type="button" class="lang-layout-btn" data-lang-layout="pie-list">Pie List</button>
+                  </div>
+                  <input type="hidden" id="lang-layout" value="bar" />
+                </div>
+
+                <!-- Max languages + Appearance -->
+                <div class="form-section">
+                  <div class="field">
+                    <div class="range-row">
+                      <label for="lang-max" class="field-label">Max languages</label>
+                      <strong id="lang-max-value">8</strong>
+                    </div>
+                    <input type="range" id="lang-max" min="3" max="15" value="8" />
+                  </div>
+                  <div class="checks" style="margin-top:10px;">
+                    <label><input type="checkbox" id="lang-hide-title" /> Hide title</label>
+                    <label><input type="checkbox" id="lang-hide-border" /> Hide border</label>
+                    <label><input type="checkbox" id="lang-centre-title" /> Centre title</label>
+                  </div>
+                </div>
+
+              </div>
 
               <!-- Stats card controls (shown by default) -->
               <div id="stats-card-controls">

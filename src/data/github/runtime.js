@@ -13,7 +13,18 @@ export const GITHUB_STATS_QUERY = `
       organizations(first: 1) { totalCount }
       repositories(first: 100, ownerAffiliations: OWNER, privacy: PUBLIC) {
         totalCount
-        nodes { stargazerCount }
+        nodes {
+          stargazerCount
+          languages(first: 10, orderBy: { field: SIZE, direction: DESC }) {
+            edges {
+              size
+              node {
+                name
+                color
+              }
+            }
+          }
+        }
       }
       repositoriesContributedTo(first: 1) { totalCount }
       contributionsCollection(
@@ -35,10 +46,35 @@ export const GITHUB_STATS_QUERY = `
 export function mapGitHubUserResponseToStats(response) {
   const user = response.user;
   const contributions = user.contributionsCollection ?? {};
-  const stars = (user.repositories?.nodes ?? []).reduce(
+  const nodes = user.repositories?.nodes ?? [];
+
+  const stars = nodes.reduce(
     (total, repository) => total + repository.stargazerCount,
     0,
   );
+
+  // Aggregate language byte counts across all repos
+  const languageTotals = {};
+  for (const repo of nodes) {
+    for (const edge of repo.languages?.edges ?? []) {
+      const name = edge.node.name;
+      if (!languageTotals[name]) {
+        languageTotals[name] = { size: 0, color: edge.node.color ?? "#ccc" };
+      }
+      languageTotals[name].size += edge.size;
+    }
+  }
+
+  // Sort by size descending and calculate percentages
+  const totalBytes = Object.values(languageTotals).reduce((sum, l) => sum + l.size, 0);
+  const languages = Object.entries(languageTotals)
+    .sort(([, a], [, b]) => b.size - a.size)
+    .map(([name, { size, color }]) => ({
+      name,
+      size,
+      color,
+      percentage: totalBytes > 0 ? Math.round((size / totalBytes) * 1000) / 10 : 0,
+    }));
 
   return {
     username: user.login,
@@ -58,6 +94,7 @@ export function mapGitHubUserResponseToStats(response) {
     contributedRepositories: user.repositoriesContributedTo?.totalCount ?? 0,
     restrictedContributions: contributions.restrictedContributionsCount ?? 0,
     contributions: contributions.contributionCalendar?.totalContributions ?? 0,
+    languages,
   };
 }
 

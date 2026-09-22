@@ -5,21 +5,31 @@ import {
   type GitHubStatKey,
 } from "./widgets/github-stats/github-stats";
 import {
-  GitHubLanguagesWidget,
   GitHubMiniBadgeWidget,
   GitHubSparklineWidget,
   GitHubGridWidget,
 } from "./widgets/github-embeds";
+import { TopLanguagesWidget } from "./widgets/top-languages/top-languages-widget";
 import type { GitHubStatsData } from "./widgets/github-stats/types";
+import type { TopLanguagesData } from "./widgets/top-languages/types";
 import { initSocialLinksBuilder, teardownSocialLinksBuilder } from "./widgets/social-links/social-links-ui";
 
 const BACKEND_STATS_URL = "/api/github/stats";
 
-let latestData: GitHubStatsData | null = null;
+let latestData: (GitHubStatsData & Partial<TopLanguagesData>) | null = null;
 let selectedTheme: ThemeName | "custom" = "default";
 let customTheme: WidgetTheme = { ...themes.default };
 let selectedMode = "stats";
 let selectedLayout: "standard" | "hidden" = "standard";
+
+// Languages panel has its own independent theme + data state
+let langLatestData: (GitHubStatsData & Partial<TopLanguagesData>) | null = null;
+let langSelectedTheme: ThemeName | "custom" = "default";
+let langCustomTheme: WidgetTheme = { ...themes.default };
+
+// Languages panel controls — populated once DOM is ready
+let langLayoutSelect: HTMLSelectElement | null = null;
+let langMaxInput: HTMLInputElement | null = null;
 const supportedStatKeys = new Set<GitHubStatKey>([
   "username",
   "name",
@@ -38,75 +48,80 @@ function getSelectedTheme(): WidgetTheme {
   return selectedTheme === "custom" ? customTheme : themes[selectedTheme];
 }
 
+function getLangTheme(): WidgetTheme {
+  return langSelectedTheme === "custom" ? langCustomTheme : themes[langSelectedTheme];
+}
+
 function updateThemePalette(): void {
   if (typeof document === "undefined") return;
-
   const theme = getSelectedTheme();
   document.querySelectorAll<HTMLElement>("[data-palette-color]").forEach((swatch) => {
     const colorKey = swatch.dataset.paletteColor as keyof typeof theme;
     swatch.style.backgroundColor = theme[colorKey];
     swatch.title = `${colorKey}: ${theme[colorKey]}`;
   });
+  const langTheme = getLangTheme();
+  document.querySelectorAll<HTMLElement>("[data-lang-palette-color]").forEach((swatch) => {
+    const colorKey = swatch.dataset.langPaletteColor as keyof typeof langTheme;
+    swatch.style.backgroundColor = langTheme[colorKey];
+    swatch.title = `${colorKey}: ${langTheme[colorKey]}`;
+  });
 }
 
 function updateGeneratedCode(): void {
   if (typeof document === "undefined") return;
 
-  const username =
-    (document.getElementById("github-username") as HTMLInputElement | null)
-      ?.value.trim() || "Namit-Rana6";
-  const theme = selectedTheme;
-  const radius =
-    (document.getElementById("border-radius") as HTMLInputElement | null)
-      ?.value || "6";
-  const embed = selectedMode === "stats" ? "stats" : selectedMode;
+  const isLang = selectedMode === "languages";
+
+  const username = isLang
+    ? (document.getElementById("lang-username") as HTMLInputElement | null)?.value.trim() || "Namit-Rana6"
+    : (document.getElementById("github-username") as HTMLInputElement | null)?.value.trim() || "Namit-Rana6";
+
+  const theme  = isLang ? langSelectedTheme : selectedTheme;
+  const radius = (document.getElementById("border-radius") as HTMLInputElement | null)?.value || "6";
+  const embed  = selectedMode === "stats" ? "stats" : selectedMode === "languages" ? "languages" : selectedMode;
+
   const params = new URLSearchParams({ username, theme, radius });
 
-  // Custom theme colors must be set FIRST — before title, so the title color
-  // key (#xxxxxx) cannot overwrite the user's custom title text param.
-  if (selectedTheme === "custom") {
-    Object.entries(customTheme).forEach(([key, value]) => {
-      params.set(key, value);
-    });
+  if (isLang) {
+    // Lang custom theme colors
+    if (langSelectedTheme === "custom") {
+      Object.entries(langCustomTheme).forEach(([key, value]) => params.set(key, value));
+    }
+    // Lang-specific controls
+    const langTitle = (document.getElementById("lang-custom-title") as HTMLInputElement | null)?.value.trim();
+    if (langTitle) params.set("title", langTitle);
+    if ((document.getElementById("lang-hide-border") as HTMLInputElement | null)?.checked) params.set("hideBorder", "1");
+    if ((document.getElementById("lang-hide-title")  as HTMLInputElement | null)?.checked) params.set("hideTitle", "1");
+    if ((document.getElementById("lang-centre-title") as HTMLInputElement | null)?.checked) params.set("centreTitle", "1");
+    const layout = (document.getElementById("lang-layout") as HTMLInputElement | null)?.value;
+    if (layout && layout !== "bar") params.set("layout", layout);
+    const max = (document.getElementById("lang-max") as HTMLInputElement | null)?.value;
+    if (max && max !== "8") params.set("max", max);
+  } else {
+    // Stats custom theme colors
+    if (selectedTheme === "custom") {
+      Object.entries(customTheme).forEach(([key, value]) => params.set(key, value));
+    }
+    const titleVal = (document.getElementById("custom-title") as HTMLInputElement | null)?.value.trim();
+    if (titleVal) params.set("title", titleVal);
+    if ((document.getElementById("hide-border") as HTMLInputElement | null)?.checked) params.set("hideBorder", "1");
+    if ((document.getElementById("hide-title")  as HTMLInputElement | null)?.checked) params.set("hideTitle", "1");
+    if ((document.getElementById("centre-title") as HTMLInputElement | null)?.checked) params.set("centreTitle", "1");
+    if (!(document.getElementById("show-icons") as HTMLInputElement | null)?.checked) params.set("showIcons", "0");
+    const selectedStats = Array.from(
+      document.querySelectorAll<HTMLInputElement>("input[data-stat-key]:checked"),
+    ).map((i) => i.dataset.statKey).filter((k): k is GitHubStatKey => Boolean(k) && supportedStatKeys.has(k as GitHubStatKey));
+    if (selectedStats.length) params.set("stats", selectedStats.join(","));
+    if (selectedLayout === "hidden") params.set("layout", "hidden");
   }
 
-  // Custom title — set after colors so it always wins over the "title" color key
-  const titleVal = (document.getElementById("custom-title") as HTMLInputElement | null)?.value.trim();
-  if (titleVal) params.set("title", titleVal);
-
-  // hideBorder
-  const hideBorderChecked = (document.getElementById("hide-border") as HTMLInputElement | null)?.checked;
-  if (hideBorderChecked) params.set("hideBorder", "1");
-
-  // hideTitle
-  const hideTitleChecked = (document.getElementById("hide-title") as HTMLInputElement | null)?.checked;
-  if (hideTitleChecked) params.set("hideTitle", "1");
-
-  // centreTitle
-  const centreTitleChecked = (document.getElementById("centre-title") as HTMLInputElement | null)?.checked;
-  if (centreTitleChecked) params.set("centreTitle", "1");
-
-  // showIcons — omit param when checked (default on), set to "0" when unchecked
-  const showIconsChecked = (document.getElementById("show-icons") as HTMLInputElement | null)?.checked;
-  if (!showIconsChecked) params.set("showIcons", "0");
-
-  const selectedStats = Array.from(
-    document.querySelectorAll<HTMLInputElement>("input[data-stat-key]:checked"),
-  )
-    .map((input) => input.dataset.statKey)
-    .filter(
-      (key): key is GitHubStatKey =>
-        Boolean(key) && supportedStatKeys.has(key as GitHubStatKey),
-    );
-  if (selectedStats.length) params.set("stats", selectedStats.join(","));
-  if (selectedLayout === "hidden") params.set("layout", "hidden");
   const link = `https://readme-maker-ashen.vercel.app/api/${embed}?${params}`;
   const values: Record<string, string> = {
     link,
     markdown: `![GitHub ${embed} for ${username}](${link})`,
     html: `<img src="${link}" alt="GitHub ${embed} for ${username}" />`,
   };
-
   Object.entries(values).forEach(([key, value]) => {
     const output = document.querySelector(`[data-generated="${key}"]`);
     if (output) output.textContent = value;
@@ -115,7 +130,7 @@ function updateGeneratedCode(): void {
 
 export function renderGitHubStatsPreview(
   preview: HTMLElement | null,
-  data: GitHubStatsData | null = latestData,
+  data: (GitHubStatsData & Partial<TopLanguagesData>) | null = latestData,
   options: ConstructorParameters<typeof GitHubStatsWidget>[0] = {},
 ): void {
   latestData = data;
@@ -143,6 +158,36 @@ export function renderGitHubStatsPreview(
     return;
   }
 
+  // Languages mode
+  if (selectedMode === "languages") {
+    const activeData = langLatestData ?? data;
+    const langOptions = {
+      theme:        getLangTheme(),
+      borderRadius: options.borderRadius,
+      title:        (document.getElementById("lang-custom-title") as HTMLInputElement | null)?.value.trim() || undefined,
+      hideBorder:   (document.getElementById("lang-hide-border") as HTMLInputElement | null)?.checked ?? false,
+      hideTitle:    (document.getElementById("lang-hide-title")  as HTMLInputElement | null)?.checked ?? false,
+      centreTitle:  (document.getElementById("lang-centre-title") as HTMLInputElement | null)?.checked ?? false,
+      layout:       ((document.getElementById("lang-layout") as HTMLInputElement | null)?.value as "bar" | "compact" | "stacked" | "donut" | "donut-vertical" | "horizontal-list" | "vertical-list" | "grid" | "treemap" | "pie-list") ?? "bar",
+      maxLanguages: Number(langMaxInput?.value ?? 8),
+    };
+    const langData: TopLanguagesData = {
+      username:  activeData?.username,
+      languages: activeData?.languages ?? [],
+    };
+    const svg = new TopLanguagesWidget(langOptions).render(langData);
+    if (preview) preview.innerHTML = svg;
+    return;
+  }
+
+  // Social links mode
+  if (selectedMode === "badge") {
+    if (preview) {
+      preview.innerHTML = `<div class="coming-soon"><div class="coming-soon-emoji">🚀</div><strong>COMING SOON</strong></div>`;
+    }
+    return;
+  }
+
   // Non-stats modes (coming soon)
   if (selectedMode !== "stats") {
     if (preview) {
@@ -152,17 +197,7 @@ export function renderGitHubStatsPreview(
   }
 
   const embedOptions = { ...options, theme: options.theme ?? getSelectedTheme() };
-  let svg: string;
-
-  if (selectedMode === "languages") {
-    svg = new GitHubLanguagesWidget(embedOptions).render(data);
-  } else if (selectedMode === "badge") {
-    svg = new GitHubMiniBadgeWidget(embedOptions).render(data);
-  } else if (selectedMode === "sparkline") {
-    svg = new GitHubSparklineWidget(embedOptions).render(data);
-  } else {
-    svg = new GitHubStatsWidget(embedOptions).render(data);
-  }
+  const svg = new GitHubStatsWidget(embedOptions).render(data);
 
   if (preview) {
     preview.innerHTML = svg;
@@ -215,18 +250,23 @@ if (typeof document !== "undefined") {
 
   const rerender = () => {
     if (radiusValue && radiusInput) radiusValue.textContent = radiusInput.value;
-    renderGitHubStatsPreview(preview, latestData, {
-      title: titleInput?.value.trim() || undefined,
-      borderRadius: Number(radiusInput?.value || 6),
-      showIcons: iconsInput?.checked,
-      hideTitle: titleVisibilityInput?.checked,
-      hideBorder: borderInput?.checked,
-      centreTitle: centreTitleInput?.checked,
-      theme: getSelectedTheme(),
-      visibleStats: statInputs
-        .filter((statInput) => statInput.checked)
-        .map((statInput) => statInput.dataset.statKey as GitHubStatKey),
-    });
+    if (selectedMode === "languages") {
+      // Languages mode — just call the preview directly (no stats options needed)
+      renderGitHubStatsPreview(preview, latestData);
+    } else {
+      renderGitHubStatsPreview(preview, latestData, {
+        title: titleInput?.value.trim() || undefined,
+        borderRadius: Number(radiusInput?.value || 6),
+        showIcons: iconsInput?.checked,
+        hideTitle: titleVisibilityInput?.checked,
+        hideBorder: borderInput?.checked,
+        centreTitle: centreTitleInput?.checked,
+        theme: getSelectedTheme(),
+        visibleStats: statInputs
+          .filter((statInput) => statInput.checked)
+          .map((statInput) => statInput.dataset.statKey as GitHubStatKey),
+      });
+    }
     updateGeneratedCode();
   };
   renderGitHubStatsPreview(preview, latestData);
@@ -259,15 +299,130 @@ if (typeof document !== "undefined") {
 
   const statsCardControls = document.getElementById("stats-card-controls");
   const socialLinksPanel  = document.getElementById("social-links-panel");
+  const languagesPanel    = document.getElementById("languages-panel");
+  langLayoutSelect  = document.getElementById("lang-layout") as HTMLSelectElement | null;
+  langMaxInput      = document.getElementById("lang-max") as HTMLInputElement | null;
+
+  // ── Languages panel controls ──────────────────────────────────────────────
+
+  // Max languages slider — update value label AND rerender
+  langMaxInput?.addEventListener("input", () => {
+    const display = document.getElementById("lang-max-value");
+    if (display && langMaxInput) display.textContent = langMaxInput.value;
+    rerender();
+  });
+
+  // Appearance checkboxes
+  ["lang-hide-title", "lang-hide-border", "lang-centre-title"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("change", rerender);
+  });
+
+  // Custom title input
+  document.getElementById("lang-custom-title")?.addEventListener("input", rerender);
+
+  // Layout button grid
+  document.querySelectorAll<HTMLButtonElement>("[data-lang-layout]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-lang-layout]").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      const hidden = document.getElementById("lang-layout") as HTMLInputElement | null;
+      if (hidden) hidden.value = btn.dataset.langLayout ?? "bar";
+      rerender();
+    });
+  });
+
+  // ── Languages theme picker ────────────────────────────────────────────────
+  const langThemeOptionsEl  = document.getElementById("lang-theme-options");
+  const langThemeTriggerEl  = document.getElementById("lang-theme-picker-trigger");
+  const langApplyCustomEl   = document.getElementById("lang-apply-custom-theme");
+  const langCustomColorInputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>("input[data-lang-custom-color]"),
+  );
+
+  langThemeOptionsEl && Object.entries(themes).forEach(([name, theme]) => {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "theme-option";
+    option.innerHTML = `<span class="theme-option-name">${name.replace(/([A-Z])/g, " $1")}</span><span class="theme-swatches">${Object.values(theme).map((color) => `<span style="background:${color}"></span>`).join("")}</span>`;
+    option.addEventListener("click", () => {
+      langSelectedTheme = name as ThemeName;
+      if (langThemeTriggerEl) langThemeTriggerEl.textContent = option.querySelector(".theme-option-name")?.textContent ?? name;
+      const picker = document.getElementById("lang-theme-picker") as HTMLDetailsElement | null;
+      if (picker) picker.removeAttribute("open");
+      rerender();
+      updateThemePalette();
+    });
+    langThemeOptionsEl.appendChild(option);
+  });
+
+  langCustomColorInputs.forEach((inp) => {
+    inp.addEventListener("input", () => {
+      const key = inp.dataset.langCustomColor as keyof WidgetTheme;
+      langCustomTheme[key] = inp.value;
+      langSelectedTheme = "custom";
+      if (langThemeTriggerEl) langThemeTriggerEl.textContent = "Custom theme";
+      rerender();
+      updateThemePalette();
+    });
+  });
+
+  langApplyCustomEl?.addEventListener("click", () => {
+    langSelectedTheme = "custom";
+    if (langThemeTriggerEl) langThemeTriggerEl.textContent = "Custom theme";
+    rerender();
+    updateThemePalette();
+  });
+
+  // ── Languages username load ────────────────────────────────────────────────
+  const langUsernameInput = document.getElementById("lang-username") as HTMLInputElement | null;
+  const langLoadBtn       = document.getElementById("lang-load-btn") as HTMLButtonElement | null;
+  const langStatusMsg     = document.getElementById("lang-status-msg");
+
+  async function loadLangUser() {
+    const username = langUsernameInput?.value.trim();
+    if (!username || !preview) return;
+    if (langStatusMsg) langStatusMsg.textContent = "Loading…";
+    try {
+      let data: GitHubStatsData & Partial<TopLanguagesData>;
+      try {
+        const resp = await fetch(`/api/github/stats?username=${encodeURIComponent(username)}`);
+        if (!resp.ok) throw new Error(`${resp.status}`);
+        data = await resp.json() as GitHubStatsData & Partial<TopLanguagesData>;
+        if (langStatusMsg) langStatusMsg.textContent = `Loaded languages for ${username}`;
+      } catch {
+        data = await fetchPublicGitHubUser(username) as GitHubStatsData & Partial<TopLanguagesData>;
+        if (langStatusMsg) langStatusMsg.textContent = `Public fallback for ${username} — language data may be limited`;
+      }
+      langLatestData = data;
+      rerender();
+      updateGeneratedCode();
+    } catch (err) {
+      if (langStatusMsg) langStatusMsg.textContent = err instanceof Error ? err.message : "Could not load profile.";
+    }
+  }
+
+  langLoadBtn?.addEventListener("click", loadLangUser);
+  langUsernameInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); loadLangUser(); } });
+  langUsernameInput?.addEventListener("input", updateGeneratedCode);
 
   // Show/hide the right panel when mode changes
   function switchMode(mode: string) {
     if (mode === "badge") {
       if (statsCardControls) statsCardControls.style.display = "none";
+      if (languagesPanel)    languagesPanel.style.display    = "none";
       if (socialLinksPanel)  socialLinksPanel.style.display  = "block";
       initSocialLinksBuilder(preview, socialLinksPanel);
+    } else if (mode === "languages") {
+      if (statsCardControls) statsCardControls.style.display = "none";
+      if (socialLinksPanel)  { socialLinksPanel.style.display = "none"; teardownSocialLinksBuilder(socialLinksPanel); }
+      if (languagesPanel)    languagesPanel.style.display    = "block";
+      // Show placeholder if no lang data loaded yet
+      if (!langLatestData && preview) {
+        preview.innerHTML = `<div class="coming-soon"><strong>Enter a username and hit Load</strong></div>`;
+      }
     } else {
       if (statsCardControls) statsCardControls.style.display = "block";
+      if (languagesPanel)    languagesPanel.style.display    = "none";
       if (socialLinksPanel)  { socialLinksPanel.style.display = "none"; teardownSocialLinksBuilder(socialLinksPanel); }
     }
   }
