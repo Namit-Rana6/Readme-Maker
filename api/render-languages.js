@@ -2,7 +2,7 @@
  * Backend renderer for the Top Languages card — all 10 layouts.
  * Plain JS so the Vercel/Node runtime can import it without a build step.
  *
- * Layouts: bar | stacked | compact | donut | donut-vertical |
+ * Layouts: bar | compact | donut | donut-vertical |
  *          horizontal-list | vertical-list | grid | treemap | pie-list
  */
 
@@ -70,41 +70,6 @@ function renderBarSvg(langs, title, opts) {
     header(ht, title, t.title, opts.centreTitle===true, t.border) +
     `<g clip-path="url(#${clipId})">${segs.join("")}</g>` +
     legend.join("") + `</svg>`
-  );
-}
-
-// ── 2. STACKED ──────────────────────────────────────────────────────────────
-function renderStackedSvg(langs, title, opts) {
-  const t = opts.theme, ht = opts.hideTitle === true, rx = opts.borderRadius ?? 6;
-  const titleH = ht ? 0 : TITLE_H;
-  const BAR_H = 28, BAR_Y = titleH + PAD_Y;
-  const totalH = BAR_Y + BAR_H + PAD_Y;
-  const clipId = "sc";
-  const brd = opts.hideBorder ? "" : `stroke="${t.border}" stroke-width="1.5"`;
-
-  let bx = PAD_X;
-  const segs = [], labels = [];
-  langs.forEach(l => {
-    const sw = (l.percentage / 100) * INNER_W;
-    if (sw < 2) { bx += sw; return; }
-    segs.push(`<rect x="${bx.toFixed(1)}" y="${BAR_Y}" width="${sw.toFixed(1)}" height="${BAR_H}" fill="${e(l.color)}"/>`);
-    if (sw > 36) {
-      const cx = bx + sw / 2;
-      const label = l.name.length > 6 ? l.name.slice(0,5) + "…" : l.name;
-      labels.push(`<text x="${cx.toFixed(1)}" y="${BAR_Y + BAR_H/2}" dominant-baseline="middle" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" font-family="${FONT}" opacity="0.9">${e(label)}</text>`);
-    }
-    bx += sw;
-  });
-  if (bx < PAD_X + INNER_W)
-    segs.push(`<rect x="${bx.toFixed(1)}" y="${BAR_Y}" width="${(PAD_X+INNER_W-bx).toFixed(1)}" height="${BAR_H}" fill="${t.border}"/>`);
-
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">` +
-    `<defs><clipPath id="${clipId}"><rect x="${PAD_X}" y="${BAR_Y}" width="${INNER_W}" height="${BAR_H}" rx="${BAR_H/2}"/></clipPath></defs>` +
-    `<rect width="${W}" height="${totalH}" rx="${rx}" fill="${t.background}" ${brd}/>` +
-    header(ht, title, t.title, opts.centreTitle===true, t.border) +
-    `<g clip-path="url(#${clipId})">${segs.join("")}${labels.join("")}</g>` +
-    `</svg>`
   );
 }
 
@@ -326,43 +291,68 @@ function renderTreemapSvg(langs, title, opts) {
   const brd = opts.hideBorder ? "" : `stroke="${t.border}" stroke-width="1.5"`;
   const mapY = titleH + PAD_Y;
 
-  let remaining = [...langs];
-  let curY = mapY;
-  const rects = [];
+  const sum = langs.reduce((s, l) => s + l.percentage, 0);
+  const items = langs.map(l => ({ ...l, pct: l.percentage / sum }));
+
+  // aspect score for a candidate row (lower = better shaped rectangles)
+  const aspectOf = (r) => {
+    const rp = r.reduce((s, l) => s + l.pct, 0);
+    const rH = Math.max(rp * MAP_H, 4);
+    return r.reduce((w, l) => {
+      const cw = (l.pct / rp) * INNER_W;
+      return Math.max(w, Math.max(cw / rH, rH / cw));
+    }, 0);
+  };
+
+  // Build rows — always start with 2 items minimum to prevent giant single blocks
+  const rows = [];
+  let remaining = [...items];
 
   while (remaining.length > 0) {
-    const heightLeft = mapY + MAP_H - curY;
-    const totalPct = remaining.reduce((s, l) => s + l.percentage, 0);
-    let rowItems = 1, rowPct = remaining[0].percentage;
-    for (let k = 1; k < remaining.length; k++) {
-      const np = remaining[k].percentage;
-      const minWNext = (remaining[0].percentage / (rowPct + np)) * INNER_W;
-      if (minWNext >= 30) { rowItems = k + 1; rowPct += np; } else break;
+    if (remaining.length <= 2) { rows.push(remaining); break; }
+    let row = remaining.slice(0, 2);
+    for (let k = 2; k < remaining.length; k++) {
+      const candidate = [...row, remaining[k]];
+      if (aspectOf(candidate) <= aspectOf(row)) { row = candidate; } else break;
     }
-    const row = remaining.splice(0, rowItems);
-    const rowH = Math.max((rowPct / totalPct) * heightLeft - GAP, 8);
-    const rowTotalPct = row.reduce((s, l) => s + l.percentage, 0);
-    let curX = PAD_X;
-    row.forEach((l, ri) => {
-      const w = Math.max((l.percentage / rowTotalPct) * INNER_W - (ri < row.length-1 ? GAP : 0), 8);
-      const showLabel = w > 50 && rowH > 22;
-      const label = l.name.length > 8 ? l.name.slice(0,7) + "…" : l.name;
+    rows.push(row);
+    remaining = remaining.slice(row.length);
+  }
+
+  const rects = [];
+  let curY = mapY;
+
+  rows.forEach((row, ri) => {
+    const rowPct = row.reduce((s, l) => s + l.pct, 0);
+    const isLastRow = ri === rows.length - 1;
+    const thisRowH = isLastRow
+      ? Math.max(mapY + MAP_H - curY, 4)
+      : Math.max(rowPct * MAP_H - GAP, 4);
+
+    let usedW = 0;
+    row.forEach((l, ci) => {
+      const isLastCell = ci === row.length - 1;
+      const rawW = (l.pct / rowPct) * INNER_W;
+      const cellW = isLastCell ? Math.max(INNER_W - usedW, 4) : Math.max(rawW - GAP, 4);
+      const cx = PAD_X + usedW;
+      const showLabel = cellW > 46 && thisRowH > 18;
+      const label = l.name.length > 9 ? l.name.slice(0, 8) + "…" : l.name;
       rects.push(
-        `<rect x="${curX.toFixed(1)}" y="${curY.toFixed(1)}" width="${w.toFixed(1)}" height="${rowH.toFixed(1)}" rx="4" fill="${e(l.color)}"/>` +
+        `<rect x="${cx.toFixed(1)}" y="${curY.toFixed(1)}" width="${cellW.toFixed(1)}" height="${thisRowH.toFixed(1)}" rx="4" fill="${e(l.color)}"/>` +
         (showLabel
-          ? `<text x="${(curX+w/2).toFixed(1)}" y="${(curY+rowH/2-5).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#fff" font-family="${FONT}" opacity="0.95">${e(label)}</text>` +
-            `<text x="${(curX+w/2).toFixed(1)}" y="${(curY+rowH/2+9).toFixed(1)}" text-anchor="middle" font-size="10" fill="#fff" font-family="${FONT}" opacity="0.8">${pct(l.percentage)}</text>`
+          ? `<text x="${(cx+cellW/2).toFixed(1)}" y="${(curY+thisRowH/2-6).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#fff" font-family="${FONT}" opacity="0.92">${e(label)}</text>` +
+            `<text x="${(cx+cellW/2).toFixed(1)}" y="${(curY+thisRowH/2+8).toFixed(1)}" text-anchor="middle" font-size="9" fill="#fff" font-family="${FONT}" opacity="0.75">${pct(l.percentage)}</text>`
           : "")
       );
-      curX += w + GAP;
+      usedW += isLastCell ? cellW : rawW;
     });
-    curY += rowH + GAP;
-  }
+    curY += thisRowH + GAP;
+  });
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">` +
     `<rect width="${W}" height="${totalH}" rx="${rx}" fill="${t.background}" ${brd}/>` +
-    header(ht, title, t.title, opts.centreTitle===true, t.border) +
+    header(ht, title, t.title, opts.centreTitle === true, t.border) +
     rects.join("") + `</svg>`
   );
 }
@@ -437,7 +427,6 @@ export function renderLanguagesSvg(stats, options = {}) {
   }
 
   switch (options.layout) {
-    case "stacked":          return renderStackedSvg(langs, title, options);
     case "compact":          return renderCompactSvg(langs, title, options);
     case "donut":            return renderDonutSvg(langs, title, options);
     case "donut-vertical":   return renderDonutVerticalSvg(langs, title, options);

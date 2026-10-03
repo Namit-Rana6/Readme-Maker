@@ -133,7 +133,36 @@ export function renderGitHubStatsPreview(
   data: (GitHubStatsData & Partial<TopLanguagesData>) | null = latestData,
   options: ConstructorParameters<typeof GitHubStatsWidget>[0] = {},
 ): void {
-  latestData = data;
+  // Only update latestData when NOT in languages mode — languages has its own state
+  if (selectedMode !== "languages") {
+    latestData = data;
+  }
+
+  // Languages mode — handled independently from stats data
+  if (selectedMode === "languages") {
+    if (!langLatestData) {
+      if (preview) preview.innerHTML = `<div class="coming-soon"><strong>Enter a GitHub username</strong></div>`;
+      return;
+    }
+    const langOptions = {
+      theme:        getLangTheme(),
+      borderRadius: options.borderRadius,
+      title:        (document.getElementById("lang-custom-title") as HTMLInputElement | null)?.value.trim() || undefined,
+      hideBorder:   (document.getElementById("lang-hide-border") as HTMLInputElement | null)?.checked ?? false,
+      hideTitle:    (document.getElementById("lang-hide-title")  as HTMLInputElement | null)?.checked ?? false,
+      centreTitle:  (document.getElementById("lang-centre-title") as HTMLInputElement | null)?.checked ?? false,
+      layout:       ((document.getElementById("lang-layout") as HTMLInputElement | null)?.value as "bar" | "compact" | "donut" | "donut-vertical" | "horizontal-list" | "vertical-list" | "grid" | "treemap" | "pie-list") ?? "bar",
+      maxLanguages: Number(langMaxInput?.value ?? 8),
+    };
+    const langData: TopLanguagesData = {
+      username:  langLatestData.username,
+      languages: langLatestData.languages ?? [],
+    };
+    const svg = new TopLanguagesWidget(langOptions).render(langData);
+    if (preview) preview.innerHTML = svg;
+    return;
+  }
+
   if (!data) {
     if (preview) {
       preview.innerHTML = `<div class="coming-soon"><strong>Enter a GitHub username</strong></div>`;
@@ -154,28 +183,6 @@ export function renderGitHubStatsPreview(
       centreTitle: (options as any).centreTitle ?? false,
     };
     const svg = new GitHubGridWidget(embedOptions).render(data);
-    if (preview) preview.innerHTML = svg;
-    return;
-  }
-
-  // Languages mode
-  if (selectedMode === "languages") {
-    const activeData = langLatestData ?? data;
-    const langOptions = {
-      theme:        getLangTheme(),
-      borderRadius: options.borderRadius,
-      title:        (document.getElementById("lang-custom-title") as HTMLInputElement | null)?.value.trim() || undefined,
-      hideBorder:   (document.getElementById("lang-hide-border") as HTMLInputElement | null)?.checked ?? false,
-      hideTitle:    (document.getElementById("lang-hide-title")  as HTMLInputElement | null)?.checked ?? false,
-      centreTitle:  (document.getElementById("lang-centre-title") as HTMLInputElement | null)?.checked ?? false,
-      layout:       ((document.getElementById("lang-layout") as HTMLInputElement | null)?.value as "bar" | "compact" | "stacked" | "donut" | "donut-vertical" | "horizontal-list" | "vertical-list" | "grid" | "treemap" | "pie-list") ?? "bar",
-      maxLanguages: Number(langMaxInput?.value ?? 8),
-    };
-    const langData: TopLanguagesData = {
-      username:  activeData?.username,
-      languages: activeData?.languages ?? [],
-    };
-    const svg = new TopLanguagesWidget(langOptions).render(langData);
     if (preview) preview.innerHTML = svg;
     return;
   }
@@ -251,8 +258,7 @@ if (typeof document !== "undefined") {
   const rerender = () => {
     if (radiusValue && radiusInput) radiusValue.textContent = radiusInput.value;
     if (selectedMode === "languages") {
-      // Languages mode — just call the preview directly (no stats options needed)
-      renderGitHubStatsPreview(preview, latestData);
+      renderGitHubStatsPreview(preview, null);
     } else {
       renderGitHubStatsPreview(preview, latestData, {
         title: titleInput?.value.trim() || undefined,

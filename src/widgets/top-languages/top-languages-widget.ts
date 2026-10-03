@@ -99,47 +99,6 @@ function renderBar(langs: LanguageEntry[], cfg: TopLanguagesConfig): string {
   );
 }
 
-// ── 2. STACKED (full-width tall stacked bar, no legend — just labels) ───────
-function renderStacked(langs: LanguageEntry[], cfg: TopLanguagesConfig): string {
-  const t = cfg.theme ?? themes.default;
-  const ht = cfg.hideTitle === true;
-  const rx = cfg.borderRadius ?? 6;
-  const titleH = ht ? 0 : TITLE_H;
-  const BAR_H  = 28;
-  const BAR_Y  = titleH + PAD_Y;
-  const totalH = BAR_Y + BAR_H + PAD_Y;
-  const clipId = "sc";
-  const brd = cfg.hideBorder ? "" : `stroke="${t.border}" stroke-width="1.5"`;
-
-  let bx = PAD_X;
-  const segs: string[] = [];
-  const labels: string[] = [];
-  langs.forEach(l => {
-    const sw = (l.percentage / 100) * INNER_W;
-    if (sw < 2) { bx += sw; return; }
-    segs.push(`<rect x="${bx.toFixed(1)}" y="${BAR_Y}" width="${sw.toFixed(1)}" height="${BAR_H}" fill="${e(l.color)}"/>`);
-    // Only label if wide enough
-    if (sw > 36) {
-      const cx = bx + sw / 2;
-      labels.push(
-        `<text x="${cx.toFixed(1)}" y="${BAR_Y + BAR_H/2}" dominant-baseline="middle" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" font-family="${FONT}" opacity="0.9">${e(l.name.length > 6 ? l.name.slice(0,5)+"…" : l.name)}</text>`
-      );
-    }
-    bx += sw;
-  });
-  if (bx < PAD_X + INNER_W)
-    segs.push(`<rect x="${bx.toFixed(1)}" y="${BAR_Y}" width="${(PAD_X+INNER_W-bx).toFixed(1)}" height="${BAR_H}" fill="${t.border}"/>`);
-
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">` +
-    `<defs><clipPath id="${clipId}"><rect x="${PAD_X}" y="${BAR_Y}" width="${INNER_W}" height="${BAR_H}" rx="${BAR_H/2}"/></clipPath></defs>` +
-    `<rect width="${W}" height="${totalH}" rx="${rx}" fill="${t.background}" ${brd}/>` +
-    header(ht, (cfg as any)._title, t.title, cfg.centreTitle===true, t.border) +
-    `<g clip-path="url(#${clipId})">${segs.join("")}${labels.join("")}</g>` +
-    `</svg>`
-  );
-}
-
 // ── 3. COMPACT (name + mini bar + %) ───────────────────────────────────────
 function renderCompact(langs: LanguageEntry[], cfg: TopLanguagesConfig): string {
   const t = cfg.theme ?? themes.default;
@@ -215,19 +174,14 @@ function renderDonut(langs: LanguageEntry[], cfg: TopLanguagesConfig): string {
     );
   });
 
-  // Centre label: top language name
-  const top = langs[0];
+  // Centre label: empty (clean donut hole)
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">` +
     `<rect width="${W}" height="${totalH}" rx="${rx}" fill="${t.background}" ${brd}/>` +
     header(ht, (cfg as any)._title, t.title, cfg.centreTitle===true, t.border) +
     arcs.join("") +
-    // inner hole background
     `<circle cx="${CX}" cy="${CY}" r="${INNER_R}" fill="${t.background}"/>` +
-    // centre labels
-    `<text x="${CX}" y="${CY - 7}" text-anchor="middle" font-size="13" font-weight="700" fill="${t.value}" font-family="${FONT}">${e(top.name)}</text>` +
-    `<text x="${CX}" y="${CY + 10}" text-anchor="middle" font-size="11" fill="${t.text}" font-family="${FONT}">${pct(top.percentage)}</text>` +
     legend.join("") +
     `</svg>`
   );
@@ -283,8 +237,6 @@ function renderDonutVertical(langs: LanguageEntry[], cfg: TopLanguagesConfig): s
     header(ht, (cfg as any)._title, t.title, cfg.centreTitle===true, t.border) +
     arcs.join("") +
     `<circle cx="${CX}" cy="${CY}" r="${INNER_R}" fill="${t.background}"/>` +
-    `<text x="${CX}" y="${CY - 8}" text-anchor="middle" font-size="14" font-weight="700" fill="${t.value}" font-family="${FONT}">${e(top.name)}</text>` +
-    `<text x="${CX}" y="${CY + 11}" text-anchor="middle" font-size="12" fill="${t.text}" font-family="${FONT}">${pct(top.percentage)}</text>` +
     legend.join("") +
     `</svg>`
   );
@@ -395,7 +347,7 @@ function renderGrid(langs: LanguageEntry[], cfg: TopLanguagesConfig): string {
   );
 }
 
-// ── 9. TREEMAP (proportional rectangles) ───────────────────────────────────
+// ── 9. TREEMAP (proportional rectangles, squarified strip layout) ──────────
 function renderTreemap(langs: LanguageEntry[], cfg: TopLanguagesConfig): string {
   const t = cfg.theme ?? themes.default;
   const ht = cfg.hideTitle === true;
@@ -405,57 +357,84 @@ function renderTreemap(langs: LanguageEntry[], cfg: TopLanguagesConfig): string 
   const totalH = titleH + PAD_Y + MAP_H + PAD_Y;
   const brd = cfg.hideBorder ? "" : `stroke="${t.border}" stroke-width="1.5"`;
 
-  // Simple 1-level squarified strip layout (row-by-row)
-  const mapX = PAD_X, mapY = titleH + PAD_Y, mapW = INNER_W;
+  const mapX = PAD_X, mapY = titleH + PAD_Y;
   const GAP = 3;
 
-  // Group langs into rows where each row fills ~one horizontal strip
-  // Simple: sort by size already done; assign proportional heights
-  let remaining = langs.slice();
-  let curY = mapY;
-  const rects: string[] = [];
+  // Normalise to fractions summing to 1
+  const total = langs.reduce((s, l) => s + l.percentage, 0);
+  const items = langs.map(l => ({ ...l, pct: l.percentage / total }));
+
+  // Build rows: always at least 2 items, add more while worst aspect improves.
+  // Height of a row = rowPct * MAP_H (proportional to its share of the canvas).
+  const rows: (typeof items)[] = [];
+  let remaining = [...items];
 
   while (remaining.length > 0) {
-    // How much height left
-    const heightLeft = mapY + MAP_H - curY;
-    const totalPct = remaining.reduce((s, l) => s + l.percentage, 0);
+    if (remaining.length <= 2) { rows.push(remaining); break; }
 
-    // Decide how many items go in this row (target ~golden-ratio aspect)
-    let rowItems = 1;
-    let rowPct = remaining[0].percentage;
-    for (let k = 1; k < remaining.length; k++) {
-      const nextPct = remaining[k].percentage;
-      const rowH = (rowPct / totalPct) * heightLeft;
-      const rowHNext = ((rowPct + nextPct) / totalPct) * heightLeft;
-      // prefer more items if aspect ratio improves
-      const minW = (remaining[0].percentage / rowPct) * mapW;
-      const minWNext = (remaining[0].percentage / (rowPct + nextPct)) * mapW;
-      if (minWNext >= 30) { rowItems = k + 1; rowPct += nextPct; } else break;
+    // Start with 2 items minimum
+    let row = remaining.slice(0, 2);
+    let rowPct = row.reduce((s, l) => s + l.pct, 0);
+
+    const aspectOf = (r: typeof items) => {
+      const rp = r.reduce((s, l) => s + l.pct, 0);
+      const rH = Math.max(rp * MAP_H, 4);
+      return r.reduce((w, l) => {
+        const cw = (l.pct / rp) * INNER_W;
+        return Math.max(w, Math.max(cw / rH, rH / cw));
+      }, 0);
+    };
+
+    for (let k = 2; k < remaining.length; k++) {
+      const candidate = [...row, remaining[k]];
+      if (aspectOf(candidate) <= aspectOf(row)) {
+        row = candidate;
+        rowPct = candidate.reduce((s, l) => s + l.pct, 0);
+      } else {
+        break;
+      }
     }
 
-    const row = remaining.splice(0, rowItems);
-    const rowH = Math.max((rowPct / totalPct) * heightLeft - GAP, 8);
-    const rowTotalPct = row.reduce((s, l) => s + l.percentage, 0);
-    let curX = mapX;
-    row.forEach((l, ri) => {
-      const w = Math.max((l.percentage / rowTotalPct) * mapW - (ri < row.length-1 ? GAP : 0), 8);
-      const showLabel = w > 50 && rowH > 22;
+    rows.push(row);
+    remaining = remaining.slice(row.length);
+  }
+
+  const rects: string[] = [];
+  let curY = mapY;
+
+  rows.forEach((row, ri) => {
+    const rowPct = row.reduce((s, l) => s + l.pct, 0);
+    const isLastRow = ri === rows.length - 1;
+    const thisRowH = isLastRow
+      ? Math.max(mapY + MAP_H - curY, 4)
+      : Math.max(rowPct * MAP_H - GAP, 4);
+
+    let usedW = 0;
+    row.forEach((l, ci) => {
+      const isLastCell = ci === row.length - 1;
+      const rawW = (l.pct / rowPct) * INNER_W;
+      const cellW = isLastCell ? Math.max(INNER_W - usedW, 4) : Math.max(rawW - GAP, 4);
+      const cx = mapX + usedW;
+      const showLabel = cellW > 46 && thisRowH > 18;
+      const label = l.name.length > 9 ? l.name.slice(0, 8) + "…" : l.name;
+
       rects.push(
-        `<rect x="${curX.toFixed(1)}" y="${curY.toFixed(1)}" width="${w.toFixed(1)}" height="${rowH.toFixed(1)}" rx="4" fill="${e(l.color)}"/>` +
+        `<rect x="${cx.toFixed(1)}" y="${curY.toFixed(1)}" width="${cellW.toFixed(1)}" height="${thisRowH.toFixed(1)}" rx="4" fill="${e(l.color)}"/>` +
         (showLabel
-          ? `<text x="${(curX + w/2).toFixed(1)}" y="${(curY + rowH/2 - 5).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#fff" font-family="${FONT}" opacity="0.95">${e(l.name.length > 8 ? l.name.slice(0,7)+"…" : l.name)}</text>` +
-            `<text x="${(curX + w/2).toFixed(1)}" y="${(curY + rowH/2 + 9).toFixed(1)}" text-anchor="middle" font-size="10" fill="#fff" font-family="${FONT}" opacity="0.8">${pct(l.percentage)}</text>`
+          ? `<text x="${(cx + cellW / 2).toFixed(1)}" y="${(curY + thisRowH / 2 - 6).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#fff" font-family="${FONT}" opacity="0.92">${e(label)}</text>` +
+            `<text x="${(cx + cellW / 2).toFixed(1)}" y="${(curY + thisRowH / 2 + 8).toFixed(1)}" text-anchor="middle" font-size="9" fill="#fff" font-family="${FONT}" opacity="0.75">${pct(l.percentage)}</text>`
           : "")
       );
-      curX += w + GAP;
+      usedW += isLastCell ? cellW : rawW;
     });
-    curY += rowH + GAP;
-  }
+
+    curY += thisRowH + GAP;
+  });
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">` +
     `<rect width="${W}" height="${totalH}" rx="${rx}" fill="${t.background}" ${brd}/>` +
-    header(ht, (cfg as any)._title, t.title, cfg.centreTitle===true, t.border) +
+    header(ht, (cfg as any)._title, t.title, cfg.centreTitle === true, t.border) +
     rects.join("") +
     `</svg>`
   );
@@ -555,7 +534,6 @@ export class TopLanguagesWidget {
       case "donut":           return renderDonut(langs, this.config);
       case "donut-vertical":  return renderDonutVertical(langs, this.config);
       case "compact":         return renderCompact(langs, this.config);
-      case "stacked":         return renderStacked(langs, this.config);
       case "horizontal-list": return renderHorizontalList(langs, this.config);
       case "vertical-list":   return renderVerticalList(langs, this.config);
       case "grid":            return renderGrid(langs, this.config);

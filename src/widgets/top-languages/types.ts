@@ -15,7 +15,6 @@ export type LanguagesLayout =
   | "donut-vertical"
   | "compact"
   | "bar"
-  | "stacked"
   | "horizontal-list"
   | "vertical-list"
   | "grid"
